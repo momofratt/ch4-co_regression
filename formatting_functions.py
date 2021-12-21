@@ -120,12 +120,12 @@ def format_title_filenm(year, month, wd, day_night, suff):
         selection_string = selection_string + 'WD ' + wd + '°, '
         selection_filenm = selection_filenm + '_WD' + wd
         table_filenm = table_filenm + '_WD' + wd 
-        dir_nm = './' +stat+'/'+ str(year)+'/WD' + wd +'/'
+        dir_nm = dir_nm + '/WD' + wd +'/'
     if day_night_str != '': #day_night_str == '' if no selection has been performed
         selection_string = selection_string + day_night_str + 'time, '
         selection_filenm = selection_filenm + '_' + day_night_str
         table_filenm = table_filenm + '_' + day_night_str 
-        dir_nm = './' + str(year)+'/'+day_night_str +'/'
+        dir_nm = dir_nm + day_night_str +'/'
     
     table_filenm = table_filenm +'.txt'
     plot_filenm  = dir_nm+'scatter_fit_'+suff+selection_filenm+'.pdf'

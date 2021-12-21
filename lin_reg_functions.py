@@ -107,26 +107,30 @@ def fit_and_scatter_plot(df, year, month, wd, day_night, plot):
     ############## TEST FIT ROBUSTNESS THROUGH SUBSAMPLING ###################
     n_iter = 5
     fraction = 0.3
+    if wd == None:
+        n_iter = 10
+        fraction = 0.2
+    
     threshold = 0.15
     monthly_check_array = np.empty(0)
     for i in range(n_iter):
         df_sub=df.sample(frac = fraction)
         ort_res_sub, lin_res_sub, thsen_res_sub = ortho_lin_regress(df_sub[species[0]], df_sub[species[1]], df_sub[errors[0]], df_sub[errors[1]])
         monthly_check_array = np.append(monthly_check_array, ort_res_sub.beta[0])
-        
-    if np.std(monthly_check_array)/np.mean(monthly_check_array) < threshold:
         ort_res_checked = ort_res.beta[0]
         ort_res_checked_std = ort_res.sd_beta[0]
+    
+    if np.std(monthly_check_array)/np.mean(monthly_check_array) < threshold:
+        robust = True
     else:
-        ort_res_checked = 0.
-        ort_res_checked_std = 0.
+        robust = False
         
     ############## ############## ############## ############## ##############
     
     # write results on table
     if not path.exists('./'+conf.stat+'/res_fit/'+table_filenm): # write header only if the file does not already exist
         file = open('./'+conf.stat+'/res_fit/'+table_filenm, 'w')
-        file.write('year month slope slope_sd red_chi2 mean_slope_sub slope_sd_sub r2\n')
+        file.write('year month slope slope_sd red_chi2 mean_slope_sub slope_sd_sub r2 robust\n')
         file.close()        
     if path.exists('./'+conf.stat+'/res_fit/'+table_filenm):
         file = open('./'+conf.stat+'/res_fit/'+table_filenm, 'r')
@@ -142,7 +146,8 @@ def fit_and_scatter_plot(df, year, month, wd, day_night, plot):
                         str(round(ort_res.res_var,3) ) + ' ' + 
                         str(round(np.mean(monthly_check_array),3) ) + ' ' + 
                         str(round(np.std(monthly_check_array),3) ) + ' ' +
-                        str(round(lin_res[2],3) ) + '\n')
+                        str(round(lin_res[2],3) ) + ' ' +
+                        str(robust) + '\n')
             # write linear fit results
             ## information about linear fit
             # file.write(str(year) +' '+ fmt.get_month_str(month) + 

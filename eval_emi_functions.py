@@ -52,7 +52,7 @@ def eval_ch4_emis(df, year, month, wd, day_night, region):
     ch4_emi = []
     print('year avg_slope')
     for year in years:
-        avg_slope = fit_frame[(fit_frame['year']==year) & (fit_frame['slope']>0.)]['slope'].mean()
+        avg_slope = fit_frame[(fit_frame['year']==year) & (fit_frame['robust']==True)]['slope'].mean()
         print(year, round(avg_slope,2))
         ch4_emi.append( avg_slope * emi_co_frame[emi_co_frame['year']==year]['emi[t]'] * Mch4 / Mco )
     
@@ -70,16 +70,16 @@ def eval_ch4_emis(df, year, month, wd, day_night, region):
     
     print('output plot: CH4_CO_estimated_emissions'+plot_nm_suffix+'.pdf')
     fig1, ax1 = plt.subplots(1,1, figsize = (9,5))
-    fig1.suptitle('Monthly mean slope from linear fit on CH$_4$ and CO data\nPerformed selections:' + plot_nm_suffix.replace('_',' '))
+    fig1.suptitle('Monthly mean slope from linear fit on CH$_4$ and CO data at '+conf.stat+'\nPerformed selections:' + plot_nm_suffix.replace('_',' '))
     mean_slope=[]
-    mean_slope_r2=[]
+    mean_slope_weak=[]
     months = arange(1,13,1)
     for month in ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August','September','October','November','December']:
-        mean_slope.append(fit_frame[fit_frame['month']==month]['slope'].mean())
-        #mean_slope_r2.append(fit_frame[(fit_frame['month']==month) & (fit_frame['r2']>0.6)]['slope'].mean())
+        mean_slope.append(fit_frame[(fit_frame['month']==month) & (fit_frame['robust']==True)]['slope'].mean())
+        mean_slope_weak.append(fit_frame[(fit_frame['month']==month)]['slope'].mean())
     
-    ax1.plot(months,mean_slope, marker='.', ls='-')
-    #ax1.plot(months,mean_slope_r2, marker='.', ls='-', markersize=10,label='r$^2$>0.6')
+    ax1.plot(months,mean_slope, marker='.', ls='-', label='robust data', markersize=15)
+    ax1.plot(months,mean_slope_weak, marker='.', ls='-',label='all data')
     ax1.set_xticks(months)
     ax1.set_xticklabels(['jan','feb','mar','apr','may','jun','jul','aug','sept','oct','nov','dec'])
     ax1.grid()
