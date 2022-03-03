@@ -69,7 +69,7 @@ def ortho_lin_regress(x, y, err_x, err_y):
     return out_odr, linreg, thsen_model
     
 
-def fit_and_scatter_plot(df, year, month, wd, day_night, plot):
+def fit_and_scatter_plot(df, year, month, wd, day_night, plot, non_bkg):
     """ 
     Perform orthogonal and linear fit on the FIRST and SECOND columns of df and returns scatter plot and best fit line 
     
@@ -83,6 +83,8 @@ def fit_and_scatter_plot(df, year, month, wd, day_night, plot):
         string that describes the wind direction over which data have been (eventually) selected. The str format is 'min_wd-max_wd' (e.g. '20-70' for wind direction between 20 and 70 degrees)
     day_night: bool
         describes the day/night selection. True = daily selected data, False = nightime selected, None = no day/night selection
+    non_bkg: bool
+        wether to use all data (False) or only non-bkg data (True)
     Returns
     -------
     """
@@ -91,7 +93,7 @@ def fit_and_scatter_plot(df, year, month, wd, day_night, plot):
     # define columns and format titles and filenames    
     
     species, suff = fmt.get_species_suffix(df)
-    selection_string, plot_filenm, table_filenm = fmt.format_title_filenm(year, month, wd, day_night, suff)
+    selection_string, plot_filenm, table_filenm = fmt.format_title_filenm(year, month, wd, day_night, suff, non_bkg)
     errors = ['Stdev_co','Stdev_ch4']
 
     
@@ -105,21 +107,19 @@ def fit_and_scatter_plot(df, year, month, wd, day_night, plot):
     
     
     ############## TEST FIT ROBUSTNESS THROUGH SUBSAMPLING ###################
-    n_iter = 5
+    n_iter = 100
     fraction = 0.3
     if wd == None:
-        n_iter = 10
+        #n_iter = 100
         fraction = 0.2
     
-    threshold = 0.15
+    threshold = 0.3
     monthly_check_array = np.empty(0)
     for i in range(n_iter):
         df_sub=df.sample(frac = fraction)
         ort_res_sub, lin_res_sub, thsen_res_sub = ortho_lin_regress(df_sub[species[0]], df_sub[species[1]], df_sub[errors[0]], df_sub[errors[1]])
-        monthly_check_array = np.append(monthly_check_array, ort_res_sub.beta[0])
-        ort_res_checked = ort_res.beta[0]
-        ort_res_checked_std = ort_res.sd_beta[0]
-    
+        #monthly_check_array = np.append(monthly_check_array, ort_res_sub.beta[0]) # usa fit ortogonale
+        monthly_check_array = np.append(monthly_check_array, lin_res_sub[0])
     if np.std(monthly_check_array)/np.mean(monthly_check_array) < threshold:
         robust = True
     else:
@@ -140,20 +140,25 @@ def fit_and_scatter_plot(df, year, month, wd, day_night, plot):
         if (last_line[0:13] != '2020 December'): # append new data only if last line is different from 2020 December  WARNING: does not work for yearly data
             file = open('./'+conf.stat+'/res_fit/'+table_filenm, 'a')
             ## information about orthogonal fit (commented)
+            # file.write(str(year) +' '+ fmt.get_month_str(month) + 
+            #             ' ' + str(round(ort_res.beta[0],2)) +  ' ' + 
+            #             str(round(ort_res.sd_beta[0],2)) +  ' ' + 
+            #             str(round(ort_res.res_var,3) ) + ' ' + 
+            #             str(round(np.mean(monthly_check_array),3) ) + ' ' + 
+            #             str(round(np.std(monthly_check_array),3) ) + ' ' +
+            #             str(round(lin_res[2],3) ) + ' ' +
+            #             str(robust) + '\n')
+            # write linear fit results
+            ## information about linear fit
             file.write(str(year) +' '+ fmt.get_month_str(month) + 
-                        ' ' + str(round(ort_res_checked,2)) +  ' ' + 
-                        str(round(ort_res_checked_std,2)) +  ' ' + 
+                        ' ' + str(round(lin_res[0],2)) +  ' ' + 
+                        str(round(lin_res[4],2)) +  ' ' + 
                         str(round(ort_res.res_var,3) ) + ' ' + 
                         str(round(np.mean(monthly_check_array),3) ) + ' ' + 
                         str(round(np.std(monthly_check_array),3) ) + ' ' +
                         str(round(lin_res[2],3) ) + ' ' +
                         str(robust) + '\n')
-            # write linear fit results
-            ## information about linear fit
-            # file.write(str(year) +' '+ fmt.get_month_str(month) + 
-            #            ' ' + str(round(lin_res[0],2)) +  ' ' + 
-            #            str(round(lin_res[4],2))  +  ' ' + 
-            #            str(round(lin_res[2],3) ) + '\n')            
+                    
             file.close()
     
     ############## plotting ##############

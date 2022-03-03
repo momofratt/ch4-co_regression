@@ -15,7 +15,7 @@ import formatting_functions as fmt
 from numpy import arange
 import config as conf
 
-def eval_ch4_emis(df, year, month, wd, day_night, region):
+def eval_ch4_emis(df, year, month, wd, day_night, region, bads_no_bkg):
     """
     Evaluate CH4 emission using CO emissions and the fit results
     
@@ -37,7 +37,7 @@ def eval_ch4_emis(df, year, month, wd, day_night, region):
     ch4_emission_file = './res_emission_selection/predicted_'+region+'_CH4_yearly_emi.txt'
     species, suff = fmt.get_species_suffix(df)
     
-    _,_,fit_table_nm = fmt.format_title_filenm(year=year, month=month, wd=wd, day_night=day_night, suff=suff)
+    _,_,fit_table_nm = fmt.format_title_filenm(year=year, month=month, wd=wd, day_night=day_night, suff=suff, non_bkg=bads_no_bkg)
     print('\nDATA AND PARAMETERS FOR CH4 ESTIMATION')
     print('fit result file = ' + fit_table_nm)
     fit_res_file = './'+conf.stat+'/res_fit/' + fit_table_nm
@@ -52,7 +52,8 @@ def eval_ch4_emis(df, year, month, wd, day_night, region):
     ch4_emi = []
     print('year avg_slope')
     for year in years:
-        avg_slope = fit_frame[(fit_frame['year']==year) & (fit_frame['robust']==True)]['slope'].mean()
+        #avg_slope = fit_frame[(fit_frame['year']==year)]['slope'].mean()
+        avg_slope = fit_frame[(fit_frame['year']==year) & (fit_frame['robust']==True)]['slope'].mean() # use only robust months
         print(year, round(avg_slope,2))
         ch4_emi.append( avg_slope * emi_co_frame[emi_co_frame['year']==year]['emi[t]'] * Mch4 / Mco )
     
@@ -87,7 +88,7 @@ def eval_ch4_emis(df, year, month, wd, day_night, region):
     fig1.savefig('./'+conf.stat+'/plot_estimated_emissions/CH4:CO_slope'+plot_nm_suffix+'.pdf', format = 'pdf')
     
     
-def eval_ch4_monthly_emis(df, year, month, wd, day_night, region):
+def eval_ch4_monthly_emis(df, year, month, wd, day_night, region, bads_no_bkg):
     """
     Evaluate CH4 emission using CO emissions and the fit results
     
@@ -109,7 +110,7 @@ def eval_ch4_monthly_emis(df, year, month, wd, day_night, region):
     ch4_emission_file = './res_emission_selection/predicted_'+region+'_CH4_monthly_emi.txt'
     species, suff = fmt.get_species_suffix(df)
     
-    _,_,fit_table_nm = fmt.format_title_filenm(year=year, month=month, wd=wd, day_night=day_night, suff=suff)
+    _,_,fit_table_nm = fmt.format_title_filenm(year=year, month=month, wd=wd, day_night=day_night, suff=suff, non_bkg=bads_no_bkg)
     print('\nDATA AND PARAMETERS FOR CH4 ESTIMATION')
     print('fit result file = ' + fit_table_nm)
     

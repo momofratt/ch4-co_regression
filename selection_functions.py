@@ -111,7 +111,18 @@ def select_daytime(df, day):
     else:
         return df
 
-def select_and_fit(df, year, month, wd, day_night, plot):
+def select_non_bkg(df, non_bkg):
+    if non_bkg:
+        df = df[(df['co_bg']==False) & (df['ch4_bg']==False)]
+    
+    #select only non bkg conditions that last for at least 2 hours
+    df.insert(3, 'diff_p1', df['DateTime'].diff(periods=1))
+    df.insert(4, 'diff_m1', df['DateTime'].diff(periods=-1))
+    df = df[ (df['diff_p1']>dt.timedelta(hours=1)) | (df['diff_m1']<dt.timedelta(hours=-1)) ]
+    
+    return df
+
+def select_and_fit(df, year, month, wd, day_night, plot, bads_no_bkg):
     """
     Select data in dataframe and run the fit_and_scatter_plot() function according to the input parameters
     
@@ -127,6 +138,8 @@ def select_and_fit(df, year, month, wd, day_night, plot):
         define daytime (day_night==True) or nightime (day_night==False) selection. day_night==None to avoid selection 
     plot : bool
         plot or not the scatterplot and fit results
+    bads_bkg: bool
+        wether to select only non-bkg data (True) or all data (False) 
 
     Returns
     -------
@@ -134,7 +147,7 @@ def select_and_fit(df, year, month, wd, day_night, plot):
     """
     # get the name of older fit results files
     species, suff = fmt.get_species_suffix(df) 
-    _, _, table_filenm = fmt.format_title_filenm(year, month, wd, day_night, suff)
+    _, _, table_filenm = fmt.format_title_filenm(year, month, wd, day_night, suff, bads_no_bkg)
     
     if os.path.exists('./'+conf.stat+'/res_fit/'+table_filenm): # remove older fit results 
         os.remove('./'+conf.stat+'/res_fit/'+table_filenm)
@@ -151,9 +164,10 @@ def select_and_fit(df, year, month, wd, day_night, plot):
                     frame = select_month(df, year, mth)                    
                     frame = select_daytime(frame, day=day_night)
                     frame = select_wd(frame, wd=wd)
+                    frame = select_non_bkg(frame, bads_no_bkg)
                     if len(frame) > 1:
-                        lrf.fit_and_scatter_plot(frame, year=year, month=mth, wd=wd, day_night=day_night, plot=plot)
+                        lrf.fit_and_scatter_plot(frame, year=year, month=mth, wd=wd, day_night=day_night, plot=plot, non_bkg = bads_no_bkg)
             else:
                 frame = select_year(df, year)
-                lrf.fit_and_scatter_plot(frame, year=year, month=month, wd=wd, day_night=day_night, plot=plot)
+                lrf.fit_and_scatter_plot(frame, year=year, month=month, wd=wd, day_night=day_night, plot=plot, non_bkg = bads_no_bkg)
             

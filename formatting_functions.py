@@ -52,7 +52,19 @@ def get_baseline(spec):
     df = df.rename(columns={bsl_col_name:spec+'_baseline'}) # rename baseline column
 
     return df
+
+def read_BADS_frame(filenm):
+    bkg_cols = ['co_bg2', 'ch4_bg2'] # name of the background column
+    df = pd.read_csv(filenm, sep = ',', usecols = ['date'] + bkg_cols, parse_dates = {'DateTime' : ['date']}, na_values='NA')    
+    df = df[df['DateTime'] < dt.datetime(2021,1,1,0,0,0)] # remove data from 2021
+    df.insert(3, 'ch4_bg', False)
+    df.insert(4, 'co_bg', False)
+    df.loc[ df['co_bg2'] >0 , 'co_bg'] = True
+    df.loc[ df['ch4_bg2']>0 , 'ch4_bg']= True
     
+    return df[['DateTime', 'co_bg', 'ch4_bg']]     
+
+
 def insert_datetime_col(df, pos,Y,M,D,h,m):
     """ 
     Insert a datetime column in a dataframe and removes the old year, month, day, hour and min columns 
@@ -72,7 +84,7 @@ def insert_datetime_col(df, pos,Y,M,D,h,m):
     df.insert(pos, 'DateTime', pd.to_datetime(df[[Y,M,D,h,m]]) )
     del(df[Y], df[M], df[D], df[h], df[m] )
     
-def format_title_filenm(year, month, wd, day_night, suff):
+def format_title_filenm(year, month, wd, day_night, suff, non_bkg):
     """
     create string where are reported the performed selections (used in the scatterplot titles) and the 
     filenames for the results of the performed selection
@@ -126,6 +138,9 @@ def format_title_filenm(year, month, wd, day_night, suff):
         selection_filenm = selection_filenm + '_' + day_night_str
         table_filenm = table_filenm + '_' + day_night_str 
         dir_nm = dir_nm + day_night_str +'/'
+    if non_bkg:
+        selection_filenm = selection_filenm + '_non-bkg'
+        table_filenm = table_filenm + '_non-bkg'
     
     table_filenm = table_filenm +'.txt'
     plot_filenm  = dir_nm+'scatter_fit_'+suff+selection_filenm+'.pdf'
