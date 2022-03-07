@@ -14,11 +14,14 @@ import datetime as dt
 import config as conf
 def get_month_str(month_number):
     """ get month string from a given month number """
-    if month_number != False: # return empty string if month=='None'
-        months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September','October', 'November', 'December']
-        return months[month_number-1]
+    if not type(month_number)==str: #if month is a string containing the season name, return only the string (e.g. DJF, MAM etc)
+        if month_number != False: # return empty string if month=='None'
+            months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September','October', 'November', 'December']
+            return months[month_number-1]
+        else:
+            return ''
     else:
-        return ''
+        return month_number
 
 def read_L2_ICOS(file_path, file_name):
     """ read L2 ICOS data returning a dataframe """

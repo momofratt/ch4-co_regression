@@ -64,22 +64,22 @@ def ortho_lin_regress(x, y, err_x, err_y):
     x = np.array(x)[:, np.newaxis]
     y = np.array(y)[:, np.newaxis]
     thsen_model.fit(x, y)
-    #mse = mean_squared_error(thsen_model.predict(x), y)        
-    
+    #mse = mean_squared_error(thsen_model.predict(x), y)
+
     return out_odr, linreg, thsen_model
-    
+
 
 def fit_and_scatter_plot(df, year, month, wd, day_night, plot, non_bkg):
-    """ 
-    Perform orthogonal and linear fit on the FIRST and SECOND columns of df and returns scatter plot and best fit line 
-    
+    """
+    Perform orthogonal and linear fit on the FIRST and SECOND columns of df and returns scatter plot and best fit line
+
     Parameters
     ----------
     df: DataFrame
         input dataframe
-    plot: bool 
+    plot: bool
         enable or disable the scatter plot.
-    wd: str 
+    wd: str
         string that describes the wind direction over which data have been (eventually) selected. The str format is 'min_wd-max_wd' (e.g. '20-70' for wind direction between 20 and 70 degrees)
     day_night: bool
         describes the day/night selection. True = daily selected data, False = nightime selected, None = no day/night selection
@@ -90,29 +90,29 @@ def fit_and_scatter_plot(df, year, month, wd, day_night, plot, non_bkg):
     """
 
 
-    # define columns and format titles and filenames    
-    
+    # define columns and format titles and filenames
+
     species, suff = fmt.get_species_suffix(df)
     selection_string, plot_filenm, table_filenm = fmt.format_title_filenm(year, month, wd, day_night, suff, non_bkg)
     errors = ['Stdev_co','Stdev_ch4']
 
-    
+
     ################ FIT #################
     ort_res, lin_res, thsen_res = ortho_lin_regress(df[species[0]], df[species[1]], df[errors[0]], df[errors[1]]) # perform orthogonal and linear regression
     poly = np.poly1d(ort_res.beta) # define fist order polynomials with the regression coefficients
     poly_lin = np.poly1d(lin_res[0:2])
-    min_x, max_x = min( df[ df[species[0]].notna() ][species[0]] ), max( df[ df[species[0]].notna() ][species[0]] ) 
+    min_x, max_x = min( df[ df[species[0]].notna() ][species[0]] ), max( df[ df[species[0]].notna() ][species[0]] )
     xvals = np.arange(min_x, max_x, 1) # x array to plot the polynomials
     poly_thsen = thsen_res.predict(xvals[:, np.newaxis])
-    
-    
+
+
     ############## TEST FIT ROBUSTNESS THROUGH SUBSAMPLING ###################
     n_iter = 100
-    fraction = 0.3
+    fraction = 0.4
     if wd == None:
         #n_iter = 100
         fraction = 0.2
-    
+
     threshold = 0.3
     monthly_check_array = np.empty(0)
     for i in range(n_iter):
@@ -124,14 +124,14 @@ def fit_and_scatter_plot(df, year, month, wd, day_night, plot, non_bkg):
         robust = True
     else:
         robust = False
-        
+
     ############## ############## ############## ############## ##############
-    
+
     # write results on table
     if not path.exists('./'+conf.stat+'/res_fit/'+table_filenm): # write header only if the file does not already exist
         file = open('./'+conf.stat+'/res_fit/'+table_filenm, 'w')
         file.write('year month slope slope_sd red_chi2 mean_slope_sub slope_sd_sub r2 robust\n')
-        file.close()        
+        file.close()
     if path.exists('./'+conf.stat+'/res_fit/'+table_filenm):
         file = open('./'+conf.stat+'/res_fit/'+table_filenm, 'r')
         for last_line in file:
@@ -140,27 +140,27 @@ def fit_and_scatter_plot(df, year, month, wd, day_night, plot, non_bkg):
         if (last_line[0:13] != '2020 December'): # append new data only if last line is different from 2020 December  WARNING: does not work for yearly data
             file = open('./'+conf.stat+'/res_fit/'+table_filenm, 'a')
             ## information about orthogonal fit (commented)
-            # file.write(str(year) +' '+ fmt.get_month_str(month) + 
-            #             ' ' + str(round(ort_res.beta[0],2)) +  ' ' + 
-            #             str(round(ort_res.sd_beta[0],2)) +  ' ' + 
-            #             str(round(ort_res.res_var,3) ) + ' ' + 
-            #             str(round(np.mean(monthly_check_array),3) ) + ' ' + 
+            # file.write(str(year) +' '+ fmt.get_month_str(month) +
+            #             ' ' + str(round(ort_res.beta[0],2)) +  ' ' +
+            #             str(round(ort_res.sd_beta[0],2)) +  ' ' +
+            #             str(round(ort_res.res_var,3) ) + ' ' +
+            #             str(round(np.mean(monthly_check_array),3) ) + ' ' +
             #             str(round(np.std(monthly_check_array),3) ) + ' ' +
             #             str(round(lin_res[2],3) ) + ' ' +
             #             str(robust) + '\n')
             # write linear fit results
             ## information about linear fit
-            file.write(str(year) +' '+ fmt.get_month_str(month) + 
-                        ' ' + str(round(lin_res[0],2)) +  ' ' + 
-                        str(round(lin_res[4],2)) +  ' ' + 
-                        str(round(ort_res.res_var,3) ) + ' ' + 
-                        str(round(np.mean(monthly_check_array),3) ) + ' ' + 
+            file.write(str(year) +' '+ fmt.get_month_str(month) +
+                        ' ' + str(round(lin_res[0],2)) +  ' ' +
+                        str(round(lin_res[4],2)) +  ' ' +
+                        str(round(ort_res.res_var,3) ) + ' ' +
+                        str(round(np.mean(monthly_check_array),3) ) + ' ' +
                         str(round(np.std(monthly_check_array),3) ) + ' ' +
                         str(round(lin_res[2],3) ) + ' ' +
                         str(robust) + '\n')
-                    
+
             file.close()
-    
+
     ############## plotting ##############
     if plot:
         fig, ax=plt.subplots(1,1, figsize=(5,5))

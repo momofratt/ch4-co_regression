@@ -49,6 +49,32 @@ def select_month(df, year, month):
     out_df = df[(df['DateTime'].dt.year==year) & (df['DateTime'].dt.month==month)]
     return out_df
 
+def select_season(df, year, seas):
+    """ select one season of data
+
+    Parameters
+    ----------
+    df: dataframe 
+    year, month: year and month to perform the selection
+
+    Returns
+    -------
+    out_df
+    """
+
+    if seas == 'MAM':
+        out_df = df[(df['DateTime'].dt.year==year) & ((df['DateTime'].dt.month==3)|(df['DateTime'].dt.month==4)|(df['DateTime'].dt.month==5))]
+    if seas == 'JJA':
+        out_df = df[(df['DateTime'].dt.year==year) & ((df['DateTime'].dt.month==6)|(df['DateTime'].dt.month==7)|(df['DateTime'].dt.month==8))]
+    if seas == 'SON':
+        out_df = df[(df['DateTime'].dt.year==year) & ((df['DateTime'].dt.month==9)|(df['DateTime'].dt.month==10)|(df['DateTime'].dt.month==11))]
+    if seas == 'DJF':
+        out_df = df[(df['DateTime'].dt.year==year) & (df['DateTime'].dt.month==12)]
+        out_df = out_df.append(df[ (df['DateTime'].dt.year==year+1) & ((df['DateTime'].dt.month==1)|(df['DateTime'].dt.month==2))])
+
+    return out_df
+
+
 def select_wd(df, wd):
     """ select data for wind from a given wind direction
     
@@ -122,7 +148,7 @@ def select_non_bkg(df, non_bkg):
     
     return df
 
-def select_and_fit(df, year, month, wd, day_night, plot, bads_no_bkg):
+def select_and_fit(df, year, month, season, wd, day_night, plot, bads_no_bkg):
     """
     Select data in dataframe and run the fit_and_scatter_plot() function according to the input parameters
     
@@ -159,7 +185,7 @@ def select_and_fit(df, year, month, wd, day_night, plot, bads_no_bkg):
                     months = np.arange(5,13,1)
                 else:
                     months = np.arange(1,13,1)
-                
+
                 for mth in months:
                     frame = select_month(df, year, mth)                    
                     frame = select_daytime(frame, day=day_night)
@@ -167,7 +193,24 @@ def select_and_fit(df, year, month, wd, day_night, plot, bads_no_bkg):
                     frame = select_non_bkg(frame, bads_no_bkg)
                     if len(frame) > 1:
                         lrf.fit_and_scatter_plot(frame, year=year, month=mth, wd=wd, day_night=day_night, plot=plot, non_bkg = bads_no_bkg)
+            elif season:
+                if (year == 2018) & (conf.stat=='CMN'): # skip missing first months in 2018 at CMN
+                    seasons =['JJA','SON']
+                else:
+                    seasons =['DJF','MAM','JJA','SON']
+
+                for seas in seasons:
+                    if month:
+                        print('error: both month and season selected\n')
+                        os.sys.exit()
+                    frame = select_season(df, year, seas)
+                    frame = select_daytime(frame, day=day_night)
+                    frame = select_wd(frame, wd=wd)
+                    frame = select_non_bkg(frame, bads_no_bkg)
+                    if len(frame) > 1:
+                        lrf.fit_and_scatter_plot(frame, year=year, month=seas, wd=wd, day_night=day_night, plot=plot, non_bkg = bads_no_bkg)
+
+
             else:
                 frame = select_year(df, year)
                 lrf.fit_and_scatter_plot(frame, year=year, month=month, wd=wd, day_night=day_night, plot=plot, non_bkg = bads_no_bkg)
-            
