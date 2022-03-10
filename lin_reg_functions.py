@@ -60,9 +60,10 @@ def ortho_lin_regress(x, y, err_x, err_y):
     od  = odr.ODR(dat, mod, beta0=linreg[0:2])
     out_odr = od.run()
     
-    thsen_model = make_pipeline(PolynomialFeatures(1), TheilSenRegressor(random_state=42))
+    #thsen_model = make_pipeline(PolynomialFeatures(1), TheilSenRegressor(random_state=42))
+    thsen_model = TheilSenRegressor(random_state=42)
     x = np.array(x)[:, np.newaxis]
-    y = np.array(y)[:, np.newaxis]
+    y = np.array(y)
     thsen_model.fit(x, y)
     #mse = mean_squared_error(thsen_model.predict(x), y)
 
@@ -137,7 +138,7 @@ def fit_and_scatter_plot(df, year, month, wd, day_night, plot, non_bkg):
         for last_line in file:
             pass
         file.close()
-        if (last_line[0:13] != '2020 December') | (last_line[0:7] != '2020 SON'): # append new data only if last line is different from 2020 December  WARNING: does not work for yearly data
+        if (last_line[0:13] != '2020 December') | (last_line[0:8] != '2020 SON'): # append new data only if last line is different from 2020 December  WARNING: does not work for yearly data
             file = open('./'+conf.stat+'/res_fit/'+table_filenm, 'a')
             ## information about orthogonal fit (commented)
             # file.write(str(year) +' '+ fmt.get_month_str(month) +
@@ -150,9 +151,18 @@ def fit_and_scatter_plot(df, year, month, wd, day_night, plot, non_bkg):
             #             str(robust) + '\n')
             # write linear fit results
             ## information about linear fit
-            file.write(str(year) +' '+ fmt.get_month_str(month) +
-                        ' ' + str(round(lin_res[0],2)) +  ' ' +
-                        str(round(lin_res[4],2)) +  ' ' +
+            # file.write(str(year) +' '+ fmt.get_month_str(month) +
+            #             ' ' + str(round(lin_res[0],2)) +  ' ' +
+            #             str(round(lin_res[4],2)) +  ' ' +
+            #             str(round(ort_res.res_var,3) ) + ' ' +
+            #             str(round(np.mean(monthly_check_array),3) ) + ' ' +
+            #             str(round(np.std(monthly_check_array),3) ) + ' ' +
+            #             str(round(lin_res[2],3) ) + ' ' +
+            #             str(robust) + '\n')
+            # write TheilSen fit results
+            file.write(str(year) +' '+ fmt.get_month_str(month) + ' ' + 
+                        str(round(np.mean(thsen_res.coef_),2)) +  ' ' +
+                        str(-99.99) +  ' ' +
                         str(round(ort_res.res_var,3) ) + ' ' +
                         str(round(np.mean(monthly_check_array),3) ) + ' ' +
                         str(round(np.std(monthly_check_array),3) ) + ' ' +
