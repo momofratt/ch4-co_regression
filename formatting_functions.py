@@ -107,14 +107,14 @@ def format_title_filenm(year, month, wd, day_night, suff, non_bkg):
     selection_string, plot_filenm, table_filenm: str
         descriptive strings defining the scatterplot title (selection_string) and filenames for the scatterplot and fit results table
     """
-    
+
     if day_night==True: # define day_night_str string according to the day_night bool value
         day_night_str='day'
     elif day_night==False:
         day_night_str='night'
     elif day_night == None:
         day_night_str=''
-    
+
     stat=conf.stat
     selection_string = ''
     selection_filenm = ''
@@ -122,15 +122,18 @@ def format_title_filenm(year, month, wd, day_night, suff, non_bkg):
     table_filenm = 'fit_results'
     if suff!='':
         table_filenm=table_filenm+'_'+suff
-    
+
     if year != None:
         selection_string = selection_string + str(year) + ', '
         selection_filenm = selection_filenm + '_' + str(year)
         dir_nm = dir_nm +stat+'/'+ str(year)+'/'
-    if month != False:
+    if (month != False) | (type(month)==str):
         selection_string = selection_string + get_month_str(month) + ', '
         selection_filenm = selection_filenm + '_' + str(month)
-        table_filenm = table_filenm +'_monthly'
+        if (type(month)==str):
+            table_filenm = table_filenm +'_season'
+        else:
+            table_filenm = table_filenm +'_monthly'
     if wd != None:
         selection_string = selection_string + 'WD ' + wd + '°, '
         selection_filenm = selection_filenm + '_WD' + wd
@@ -144,10 +147,10 @@ def format_title_filenm(year, month, wd, day_night, suff, non_bkg):
     if non_bkg:
         selection_filenm = selection_filenm + '_non-bkg'
         table_filenm = table_filenm + '_non-bkg'
-    
+
     table_filenm = table_filenm +'.txt'
     plot_filenm  = dir_nm+'scatter_fit_'+suff+selection_filenm+'.pdf'
-    
+
     return selection_string, plot_filenm, table_filenm
 
 def get_species_suffix(df):
