@@ -37,7 +37,10 @@ def eval_ch4_emis(df, year, month, season, wd, day_night, region, bads_no_bkg):
     ch4_emission_file = './res_emission_selection/predicted_'+region+'_CH4_yearly_emi.txt'
     species, suff = fmt.get_species_suffix(df)
     
-    _,_,fit_table_nm = fmt.format_title_filenm(year=year, month=month, wd=wd, day_night=day_night, suff=suff, non_bkg=bads_no_bkg)
+    if month:
+        _,_,fit_table_nm = fmt.format_title_filenm(year=year, month=month, season=None,wd=wd, day_night=day_night, suff=suff, non_bkg=bads_no_bkg)
+    if season:
+        _,_,fit_table_nm = fmt.format_title_filenm(year=year, month=season, season=season, wd=wd, day_night=day_night, suff=suff, non_bkg=bads_no_bkg)
     print('\nDATA AND PARAMETERS FOR CH4 ESTIMATION')
     print('fit result file = ' + fit_table_nm)
     fit_res_file = './'+conf.stat+'/res_fit/' + fit_table_nm
@@ -71,25 +74,25 @@ def eval_ch4_emis(df, year, month, season, wd, day_night, region, bads_no_bkg):
     ax.set_ylabel('CH$_4$ total emission [t]')
     ax.grid()
     fig.savefig('./'+conf.stat+'/plot_estimated_emissions/CH4_CO_'+region+'_estimated_emissions'+plot_nm_suffix+'.pdf', format = 'pdf')
-    
-    print('output plot: CH4_CO_estimated_emissions'+plot_nm_suffix+'.pdf')
-    fig1, ax1 = plt.subplots(1,1, figsize = (9,5))
-    fig1.suptitle('Monthly mean slope from linear fit on CH$_4$ and CO data at '+conf.stat+'\nPerformed selections:' + plot_nm_suffix.replace('_',' '))
-    mean_slope=[]
-    mean_slope_weak=[]
-    months = arange(1,13,1)
-    for month in ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August','September','October','November','December']:
-        mean_slope.append(fit_frame[(fit_frame['month']==month) & (fit_frame['robust']==True)]['slope'].mean())
-        mean_slope_weak.append(fit_frame[(fit_frame['month']==month)]['slope'].mean())
-    
-    ax1.plot(months,mean_slope, marker='.', ls='-', label='robust data', markersize=15)
-    ax1.plot(months,mean_slope_weak, marker='.', ls='-',label='all data')
-    ax1.set_xticks(months)
-    ax1.set_xticklabels(['jan','feb','mar','apr','may','jun','jul','aug','sept','oct','nov','dec'])
-    ax1.grid()
-    ax1.legend()
-    fig1.savefig('./'+conf.stat+'/plot_estimated_emissions/CH4:CO_slope'+plot_nm_suffix+'.pdf', format = 'pdf')
-    
+    if month:
+        print('output plot: CH4_CO_estimated_emissions'+plot_nm_suffix+'.pdf')
+        fig1, ax1 = plt.subplots(1,1, figsize = (9,5))
+        fig1.suptitle('Monthly mean slope from linear fit on CH$_4$ and CO data at '+conf.stat+'\nPerformed selections:' + plot_nm_suffix.replace('_',' '))
+        mean_slope=[]
+        mean_slope_weak=[]
+        months = arange(1,13,1)
+        for month in ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August','September','October','November','December']:
+            mean_slope.append(fit_frame[(fit_frame['month']==month) & (fit_frame['robust']==True)]['slope'].mean())
+            mean_slope_weak.append(fit_frame[(fit_frame['month']==month)]['slope'].mean())
+        
+        ax1.plot(months,mean_slope, marker='.', ls='-', label='robust data', markersize=15)
+        ax1.plot(months,mean_slope_weak, marker='.', ls='-',label='all data')
+        ax1.set_xticks(months)
+        ax1.set_xticklabels(['jan','feb','mar','apr','may','jun','jul','aug','sept','oct','nov','dec'])
+        ax1.grid()
+        ax1.legend()
+        fig1.savefig('./'+conf.stat+'/plot_estimated_emissions/CH4:CO_slope'+plot_nm_suffix+'.pdf', format = 'pdf')
+        
     
 def eval_ch4_monthly_emis(df, year, month, wd, day_night, region, bads_no_bkg):
     """
@@ -113,7 +116,7 @@ def eval_ch4_monthly_emis(df, year, month, wd, day_night, region, bads_no_bkg):
     ch4_emission_file = './res_emission_selection/predicted_'+region+'_CH4_monthly_emi.txt'
     species, suff = fmt.get_species_suffix(df)
     
-    _,_,fit_table_nm = fmt.format_title_filenm(year=year, month=month, wd=wd, day_night=day_night, suff=suff, non_bkg=bads_no_bkg)
+    _,_,fit_table_nm = fmt.format_title_filenm(year=year, month=month, season=None, wd=wd, day_night=day_night, suff=suff, non_bkg=bads_no_bkg)
     print('\nDATA AND PARAMETERS FOR CH4 ESTIMATION')
     print('fit result file = ' + fit_table_nm)
     

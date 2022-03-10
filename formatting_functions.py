@@ -87,7 +87,7 @@ def insert_datetime_col(df, pos,Y,M,D,h,m):
     df.insert(pos, 'DateTime', pd.to_datetime(df[[Y,M,D,h,m]]) )
     del(df[Y], df[M], df[D], df[h], df[m] )
     
-def format_title_filenm(year, month, wd, day_night, suff, non_bkg):
+def format_title_filenm(year, month, season, wd, day_night, suff, non_bkg):
     """
     create string where are reported the performed selections (used in the scatterplot titles) and the 
     filenames for the results of the performed selection
@@ -107,7 +107,6 @@ def format_title_filenm(year, month, wd, day_night, suff, non_bkg):
     selection_string, plot_filenm, table_filenm: str
         descriptive strings defining the scatterplot title (selection_string) and filenames for the scatterplot and fit results table
     """
-
     if day_night==True: # define day_night_str string according to the day_night bool value
         day_night_str='day'
     elif day_night==False:
@@ -130,10 +129,11 @@ def format_title_filenm(year, month, wd, day_night, suff, non_bkg):
     if (month != False) | (type(month)==str):
         selection_string = selection_string + get_month_str(month) + ', '
         selection_filenm = selection_filenm + '_' + str(month)
-        if (type(month)==str):
+        if (type(month)==str) | (season==True):
             table_filenm = table_filenm +'_season'
         else:
             table_filenm = table_filenm +'_monthly'
+            
     if wd != None:
         selection_string = selection_string + 'WD ' + wd + '°, '
         selection_filenm = selection_filenm + '_WD' + wd

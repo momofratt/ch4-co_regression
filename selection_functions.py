@@ -173,7 +173,7 @@ def select_and_fit(df, year, month, season, wd, day_night, plot, bads_no_bkg):
     """
     # get the name of older fit results files
     species, suff = fmt.get_species_suffix(df) 
-    _, _, table_filenm = fmt.format_title_filenm(year, month, wd, day_night, suff, bads_no_bkg)
+    _, _, table_filenm = fmt.format_title_filenm(year, month, season, wd, day_night, suff, bads_no_bkg)
     
     if os.path.exists('./'+conf.stat+'/res_fit/'+table_filenm): # remove older fit results 
         os.remove('./'+conf.stat+'/res_fit/'+table_filenm)
