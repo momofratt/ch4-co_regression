@@ -61,7 +61,7 @@ def ortho_lin_regress(x, y, err_x, err_y):
     out_odr = od.run()
     
     #thsen_model = make_pipeline(PolynomialFeatures(1), TheilSenRegressor(random_state=42))
-    thsen_model = TheilSenRegressor(random_state=42)
+    thsen_model = TheilSenRegressor(random_state=42, max_iter = 1000)
     x = np.array(x)[:, np.newaxis]
     y = np.array(y)
     thsen_model.fit(x, y)
@@ -96,7 +96,8 @@ def fit_and_scatter_plot(df, year, month, wd, day_night, plot, non_bkg):
     species, suff = fmt.get_species_suffix(df)
     selection_string, plot_filenm, table_filenm = fmt.format_title_filenm(year, month, None,wd, day_night, suff, non_bkg)
     errors = ['Stdev_co','Stdev_ch4']
-
+    df.loc[ df[errors[0]]==0, errors[0]] = np.nan
+    df.loc[ df[errors[1]]==0, errors[1]] = np.nan
 
     ################ FIT #################
     ort_res, lin_res, thsen_res = ortho_lin_regress(df[species[0]], df[species[1]], df[errors[0]], df[errors[1]]) # perform orthogonal and linear regression
