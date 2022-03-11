@@ -174,9 +174,13 @@ def select_and_fit(df, year, month, season, wd, day_night, plot, bads_no_bkg):
     # get the name of older fit results files
     species, suff = fmt.get_species_suffix(df) 
     _, _, table_filenm = fmt.format_title_filenm(year, month, season, wd, day_night, suff, bads_no_bkg)
-    
+
     if os.path.exists('./'+conf.stat+'/res_fit/'+table_filenm): # remove older fit results 
         os.remove('./'+conf.stat+'/res_fit/'+table_filenm)
+    
+    if month & season:
+            print('ERROR: both month and season selected\n')
+            os.sys.exit()
     
     if year:
         for year in conf.years:
@@ -200,9 +204,7 @@ def select_and_fit(df, year, month, season, wd, day_night, plot, bads_no_bkg):
                     seasons =['DJF','MAM','JJA','SON']
 
                 for seas in seasons:
-                    if month:
-                        print('error: both month and season selected\n')
-                        os.sys.exit()
+                    
                     frame = select_season(df, year, seas)
                     frame = select_daytime(frame, day=day_night)
                     frame = select_wd(frame, wd=wd)

@@ -61,7 +61,7 @@ def ortho_lin_regress(x, y, err_x, err_y):
     out_odr = od.run()
     
     #thsen_model = make_pipeline(PolynomialFeatures(1), TheilSenRegressor(random_state=42))
-    thsen_model = TheilSenRegressor(random_state=42, max_iter = 1000)
+    thsen_model = TheilSenRegressor(random_state=42, max_iter = 10000)
     x = np.array(x)[:, np.newaxis]
     y = np.array(y)
     thsen_model.fit(x, y)
@@ -109,23 +109,26 @@ def fit_and_scatter_plot(df, year, month, wd, day_night, plot, non_bkg):
 
 
     ############## TEST FIT ROBUSTNESS THROUGH SUBSAMPLING ###################
-    n_iter = 100
-    fraction = 0.4
-    if wd == None:
-        #n_iter = 100
-        fraction = 0.2
+    robust=None
+    monthly_check_array = np.array([-999.99])
+    # n_iter = 100
+    # fraction = 0.4
+    # if wd == None:
+    #     #n_iter = 100
+    #     fraction = 0.2
 
-    threshold = 0.3
-    monthly_check_array = np.empty(0)
-    for i in range(n_iter):
-        df_sub=df.sample(frac = fraction)
-        ort_res_sub, lin_res_sub, thsen_res_sub = ortho_lin_regress(df_sub[species[0]], df_sub[species[1]], df_sub[errors[0]], df_sub[errors[1]])
-        #monthly_check_array = np.append(monthly_check_array, ort_res_sub.beta[0]) # usa fit ortogonale
-        monthly_check_array = np.append(monthly_check_array, lin_res_sub[0])
-    if np.std(monthly_check_array)/np.mean(monthly_check_array) < threshold:
-        robust = True
-    else:
-        robust = False
+    # threshold = 0.3
+    # monthly_check_array = np.empty(0)
+    # for i in range(n_iter):
+    #     df_sub=df.sample(frac = fraction)
+    #     ort_res_sub, lin_res_sub, thsen_res_sub = ortho_lin_regress(df_sub[species[0]], df_sub[species[1]], df_sub[errors[0]], df_sub[errors[1]])
+    #     #monthly_check_array = np.append(monthly_check_array, ort_res_sub.beta[0]) # usa fit ortogonale
+    #     monthly_check_array = np.append(monthly_check_array, lin_res_sub[0])
+    # if np.std(monthly_check_array)/np.mean(monthly_check_array) < threshold:
+    #     robust = True
+    # else:
+    #     robust = False
+   
 
     ############## ############## ############## ############## ##############
 
@@ -187,7 +190,7 @@ def fit_and_scatter_plot(df, year, month, wd, day_night, plot, non_bkg):
         # add fit information:
         props = dict(boxstyle='round', facecolor='wheat', alpha=0.7)           
         if not isnan(ort_res.beta[0] + ort_res.beta[1]  + lin_res[0] + lin_res[1]):
-            f_string = '$f_{orth}(x)$ = ' +str(round(ort_res.beta[0],2))+ ' x + ' +str(round(ort_res.beta[1]))+ '\n' + '$f_{lin}(x)$ = ' +str(round(lin_res[0],2))+ ' x + ' +str(round(lin_res[1]))
+            f_string = '$f_{orth}(x)$ = ' +str(round(ort_res.beta[0],2))+ ' x + ' +str(round(ort_res.beta[1]))+ '\n' + '$f_{lin}(x)$ = ' +str(round(lin_res[0],2))+ ' x + ' +str(round(lin_res[1])) + '\n' + '$f_{TS}(x)$ = ' +str(round(np.mean(thsen_res.coef_),2))+ ' x + ' +str(round(np.mean(thsen_res.intercept_)))  
             ax.text(0.55, 0.05, f_string, transform=ax.transAxes, bbox=props) 
         
         plt.savefig(plot_filenm, format='pdf')

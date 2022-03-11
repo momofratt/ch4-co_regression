@@ -51,15 +51,16 @@ def eval_ch4_emis(df, year, month, season, wd, day_night, region, bads_no_bkg):
     Mco = 28.010 # CO molecular weight
     emi_co_frame = pd.read_csv(co_emission_file, sep=' ')
     fit_frame = pd.read_csv(fit_res_file, sep=' ')
-    years = [2018,2019,2020]
+    years = conf.years
     ch4_emi = []
     print('year avg_slope')
     for year in years:
-        #avg_slope = fit_frame[(fit_frame['year']==year)]['slope'].mean()
+        #avg_slope = fit_frame[(fit_frame['year']==year)]['slope'].mean()+
+        #avg_slope = fit_frame[(fit_frame['year']==year) & (fit_frame['robust']==True)]['slope'].mean() # use only robust months
         if not season:
-            avg_slope = fit_frame[(fit_frame['year']==year) & (fit_frame['robust']==True)]['slope'].mean() # use only robust months
+            avg_slope = fit_frame[(fit_frame['year']==year)]['slope'].mean() # use only robust months
         else:
-            avg_slope = fit_frame[(fit_frame['year']==year) & (fit_frame['robust']==True)]['slope'].mean() # use only robust months
+            avg_slope = fit_frame[(fit_frame['year']==year)]['slope'].mean() # use only robust months
         print(year, round(avg_slope,2))
         ch4_emi.append( avg_slope * emi_co_frame[emi_co_frame['year']==year]['emi[t]'] * Mch4 / Mco )
     

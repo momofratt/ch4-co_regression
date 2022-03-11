@@ -126,7 +126,7 @@ def format_title_filenm(year, month, season, wd, day_night, suff, non_bkg):
         selection_string = selection_string + str(year) + ', '
         selection_filenm = selection_filenm + '_' + str(year)
         dir_nm = dir_nm +stat+'/'+ str(year)+'/'
-    if (month != False) | (type(month)==str):
+    if (month != False) | (type(month)==str) | (season==True):
         selection_string = selection_string + get_month_str(month) + ', '
         selection_filenm = selection_filenm + '_' + str(month)
         if (type(month)==str) | (season==True):
