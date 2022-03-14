@@ -139,7 +139,8 @@ def select_daytime(df, day):
 
 def select_non_bkg(df, non_bkg):
     if non_bkg:
-        df = df[(df['co_bg']==False) & (df['ch4_bg']==False)]
+        #df = df[(df['co_bg']==False) & (df['ch4_bg']==False)]
+        df = df[(df['bkg']==False)]
     
     #select only non bkg conditions that last for at least 2 hours
     df.insert(3, 'diff_p1', df['DateTime'].diff(periods=1))

@@ -142,7 +142,7 @@ def fit_and_scatter_plot(df, year, month, wd, day_night, plot, non_bkg):
         for last_line in file:
             pass
         file.close()
-        if (last_line[0:13] != '2020 December') | (last_line[0:8] != '2020 SON'): # append new data only if last line is different from 2020 December  WARNING: does not work for yearly data
+        if (last_line[0:13] != str(conf.years[-1])+' December') | (last_line[0:8] != str(conf.years[-1])+' SON'): # append new data only if last line is different from 2020 December  WARNING: does not work for yearly data
             file = open('./'+conf.stat+'/res_fit/'+table_filenm, 'a')
             ## information about orthogonal fit (commented)
             # file.write(str(year) +' '+ fmt.get_month_str(month) +
@@ -194,3 +194,4 @@ def fit_and_scatter_plot(df, year, month, wd, day_night, plot, non_bkg):
             ax.text(0.55, 0.05, f_string, transform=ax.transAxes, bbox=props) 
         
         plt.savefig(plot_filenm, format='pdf')
+        fig.close()

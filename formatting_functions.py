@@ -56,17 +56,23 @@ def get_baseline(spec):
 
     return df
 
-def read_BADS_frame(filenm):
-    bkg_cols = ['co_bg2', 'ch4_bg2'] # name of the background column
-    df = pd.read_csv(filenm, sep = ',', usecols = ['date'] + bkg_cols, parse_dates = {'DateTime' : ['date']}, na_values='NA')    
-    df = df[df['DateTime'] < dt.datetime(2021,1,1,0,0,0)] # remove data from 2021
-    df.insert(3, 'ch4_bg', False)
-    df.insert(4, 'co_bg', False)
-    df.loc[ df['co_bg2'] >0 , 'co_bg'] = True
-    df.loc[ df['ch4_bg2']>0 , 'ch4_bg']= True
+# def read_BADS_frame(filenm):
+#     bkg_cols = ['co_bg2', 'ch4_bg2'] # name of the background column
+#     df = pd.read_csv(filenm, sep = ',', usecols = ['date'] + bkg_cols, parse_dates = {'DateTime' : ['date']}, na_values='NA')    
+#     df = df[df['DateTime'] < dt.datetime(2021,1,1,0,0,0)] # remove data from 2021
+#     df.insert(3, 'ch4_bg', False)
+#     df.insert(4, 'co_bg', False)
+#     df.loc[ df['co_bg2'] >0 , 'co_bg'] = True
+#     df.loc[ df['ch4_bg2']>0 , 'ch4_bg']= True
     
-    return df[['DateTime', 'co_bg', 'ch4_bg']]     
-
+#     return df[['DateTime', 'co_bg', 'ch4_bg']]     
+def read_BADS_frame(filenm):
+    bkg_cols = ['co2_bg2'] # name of the background column
+    df = pd.read_csv(filenm, sep = ',', usecols = ['date'] + bkg_cols, parse_dates = {'DateTime' : ['date']}, na_values='NA')    
+    df.insert(len(df.columns), 'bkg', False)
+    df.loc[ df['co2_bg2'] > 0 , 'bkg'] = True
+    
+    return df[['DateTime', 'bkg']]     
 
 def insert_datetime_col(df, pos,Y,M,D,h,m):
     """ 
