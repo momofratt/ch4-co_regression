@@ -194,4 +194,4 @@ def fit_and_scatter_plot(df, year, month, wd, day_night, plot, non_bkg):
             ax.text(0.55, 0.05, f_string, transform=ax.transAxes, bbox=props) 
         
         plt.savefig(plot_filenm, format='pdf')
-        fig.close()
+        plt.close(fig)

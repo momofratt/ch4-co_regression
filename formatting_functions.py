@@ -56,24 +56,33 @@ def get_baseline(spec):
 
     return df
 
-# def read_BADS_frame(filenm):
-#     bkg_cols = ['co_bg2', 'ch4_bg2'] # name of the background column
-#     df = pd.read_csv(filenm, sep = ',', usecols = ['date'] + bkg_cols, parse_dates = {'DateTime' : ['date']}, na_values='NA')    
-#     df = df[df['DateTime'] < dt.datetime(2021,1,1,0,0,0)] # remove data from 2021
-#     df.insert(3, 'ch4_bg', False)
-#     df.insert(4, 'co_bg', False)
-#     df.loc[ df['co_bg2'] >0 , 'co_bg'] = True
-#     df.loc[ df['ch4_bg2']>0 , 'ch4_bg']= True
-    
-#     return df[['DateTime', 'co_bg', 'ch4_bg']]     
-def read_BADS_frame(filenm):
-    bkg_cols = ['co2_bg2'] # name of the background column
-    df = pd.read_csv(filenm, sep = ',', usecols = ['date'] + bkg_cols, parse_dates = {'DateTime' : ['date']}, na_values='NA')    
-    df.insert(len(df.columns), 'bkg', False)
-    df.loc[ df['co2_bg2'] > 0 , 'bkg'] = True
-    
-    return df[['DateTime', 'bkg']]     
+def read_BADS_frame():
+    """
+    read the BaDS results frame and add a bkg column
 
+    Returns:
+    out_frame: dataframe with datetime and bkg column
+    ---------
+    """
+    specie = conf.non_bkg_specie # define wether to perform selection on co2, co or ch4. Can be either 'co2' or 'co+ch4'
+    if specie == 'co2':
+        bkg_cols = ['co2_bg2'] # name of the background column
+        df = pd.read_csv('./BaDS_baseline/'+conf.stat+'_2018-2021_co2_BaDSfit_annual_selection_mar22.csv', sep = ',', usecols = ['date'] + bkg_cols, parse_dates = {'DateTime' : ['date']}, na_values='NA')    
+        df.insert(len(df.columns), 'bkg', False)
+        df.loc[ df['co2_bg2'] > 0 , 'bkg'] = True
+    
+    if specie == 'co+ch4': # select data that are flagged as bkg for both co and ch4
+        if conf.stat=='LMP':
+            print('ERROR: no CO or CH4 bads results at LMP')
+            os.sys.exit()
+        bkg_cols = ['co_bg2', 'ch4_bg2'] # name of the background column
+        df = pd.read_csv('./BaDS_baseline/2018-2021_BaDSfit_annual_selection.csv', sep = ',', usecols = ['date'] + bkg_cols, parse_dates = {'DateTime' : ['date']}, na_values='NA')    
+        #df = df[df['DateTime'] < dt.datetime(2021,1,1,0,0,0)] # remove data from 2021
+        df.insert(len(df.columns), 'bkg', False)
+        df.loc[ (df['co_bg2'] >0) & (df['ch4_bg2']>0) , 'bkg'] = True
+     
+    return df[['DateTime', 'bkg']] 
+    
 def insert_datetime_col(df, pos,Y,M,D,h,m):
     """ 
     Insert a datetime column in a dataframe and removes the old year, month, day, hour and min columns 
@@ -151,8 +160,9 @@ def format_title_filenm(year, month, season, wd, day_night, suff, non_bkg):
         table_filenm = table_filenm + '_' + day_night_str 
         dir_nm = dir_nm + day_night_str +'/'
     if non_bkg:
-        selection_filenm = selection_filenm + '_non-bkg'
-        table_filenm = table_filenm + '_non-bkg'
+        selection_string = selection_string + 'BaDS non-bkg ' + conf.non_bkg_specie
+        selection_filenm = selection_filenm + '_non-bkg_'+ conf.non_bkg_specie
+        table_filenm = table_filenm + '_non-bkg_'+ conf.non_bkg_specie
 
     table_filenm = table_filenm +'.txt'
     plot_filenm  = dir_nm+'scatter_fit_'+suff+selection_filenm+'.pdf'

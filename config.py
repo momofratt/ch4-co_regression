@@ -19,7 +19,7 @@ stat= 'CMN'
 gas_inst = '590'
 met_inst = '1156'
 years=[2018, 2019, 2020]
-bads_filenm = './BaDS_baseline/CMN_2018-2021_co2_BaDSfit_annual_selection_mar22.csv'
+non_bkg_specie = 'co2' # specie(s) to perform non-bkg selection using BaDSfit results
 
 ######################################################################
 ################            LAMPEDUSA           ######################
