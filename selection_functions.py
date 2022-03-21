@@ -138,14 +138,17 @@ def select_daytime(df, day):
         return df
 
 def select_non_bkg(df, non_bkg):
-    if non_bkg:
+    if non_bkg: # NON-background case
         #df = df[(df['co_bg']==False) & (df['ch4_bg']==False)]
         df = df[(df['bkg']==False)]
+    elif not non_bkg: # background case
+        df = df[(df['bkg']==True)]
     
-    #select only non bkg conditions that last for at least 2 hours
-    df.insert(3, 'diff_p1', df['DateTime'].diff(periods=1))
-    df.insert(4, 'diff_m1', df['DateTime'].diff(periods=-1))
-    df = df[ (df['diff_p1']>dt.timedelta(hours=1)) | (df['diff_m1']<dt.timedelta(hours=-1)) ]
+    if (non_bkg==True) | (non_bkg==False) :
+        #select only _(non-)bkg conditions that last for at least 2 hours
+        df.insert(3, 'diff_p1', df['DateTime'].diff(periods=1))
+        df.insert(4, 'diff_m1', df['DateTime'].diff(periods=-1))
+        df = df[ (df['diff_p1']>dt.timedelta(hours=1)) | (df['diff_m1']<dt.timedelta(hours=-1)) ]
     
     return df
 
@@ -166,7 +169,7 @@ def select_and_fit(df, year, month, season, wd, day_night, plot, bads_no_bkg):
     plot : bool
         plot or not the scatterplot and fit results
     bads_bkg: bool
-        wether to select only non-bkg data (True) or all data (False) 
+        wether to select only non-bkg data (True), bkg data (False) or all data (None)
 
     Returns
     -------
@@ -186,11 +189,11 @@ def select_and_fit(df, year, month, season, wd, day_night, plot, bads_no_bkg):
     if year:
         for year in conf.years:
             if month:  # if month == True performs for loop over months, otherwise performs loop over years
-                if (year == 2018) & (conf.stat=='CMN'): # skip missing first months in 2018 at CMN
-                    months = np.arange(5,13,1)
-                else:
-                    months = np.arange(1,13,1)
-
+                # if (year == 2018) & (conf.stat=='CMN'): # skip missing first months in 2018 at CMN
+                #     months = np.arange(5,13,1)
+                # else:
+                #     months = np.arange(1,13,1)
+                months = np.arange(1,13,1)
                 for mth in months:
                     frame = select_month(df, year, mth)                    
                     frame = select_daytime(frame, day=day_night)
@@ -199,11 +202,11 @@ def select_and_fit(df, year, month, season, wd, day_night, plot, bads_no_bkg):
                     if len(frame) > 1:
                         lrf.fit_and_scatter_plot(frame, year=year, month=mth, wd=wd, day_night=day_night, plot=plot, non_bkg = bads_no_bkg)
             elif season:
-                if (year == 2018) & (conf.stat=='CMN'): # skip missing first months in 2018 at CMN
-                    seasons =['JJA','SON']
-                else:
-                    seasons =['DJF','MAM','JJA','SON']
-
+                # if (year == 2018) & (conf.stat=='CMN'): # skip missing first months in 2018 at CMN
+                #     seasons =['JJA','SON']
+                # else:
+                #     seasons =['DJF','MAM','JJA','SON']
+                seasons =['DJF','MAM','JJA','SON']
                 for seas in seasons:
                     
                     frame = select_season(df, year, seas)

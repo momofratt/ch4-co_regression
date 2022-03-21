@@ -19,7 +19,7 @@ stat= 'CMN'
 gas_inst = '590'
 met_inst = '1156'
 years=[2018, 2019, 2020]
-non_bkg_specie = 'co2' # specie(s) to perform non-bkg selection using BaDSfit results
+non_bkg_specie = 'co+ch4' # specie(s) to perform non-bkg selection using BaDSfit results
 
 ######################################################################
 ################            LAMPEDUSA           ######################

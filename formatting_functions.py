@@ -33,6 +33,24 @@ def read_L2_ICOS(file_path, file_name):
     out_frame = pd.read_csv(file_path+file_name, sep=';', skiprows = head_nlines-1)
     return out_frame
 
+def append_2018(frame_CH4, frame_CO):
+    """ add data from jan 2018 to may 2018 (not ICOS official data) """
+    data_path = './L2_ICOS_data/Dati_CMN_201801-05/2018_CMN.dat'
+    df = pd.read_csv(data_path, sep =' ', parse_dates={'DateTime':['DATE','TIME']}, usecols=['DATE','TIME','CO', 'CH4_cal'])
+    df['DateTime']=pd.to_datetime(df['DateTime'], format="%Y-%m-%d %H:%M:%S")
+    df = df.rename(columns={'CH4_cal':'ch4','CO':'co' })
+    df = df[ df['DateTime'].dt.date < dt.date(2018,5,10)]
+    frame_CH4 = frame_CH4[frame_CH4['DateTime'].dt.date > dt.date(2018,5,10)]
+    df_ch4 = df[['DateTime','ch4']].append(frame_CH4)
+    
+    frame_CO = frame_CO[frame_CO['DateTime'].dt.date > dt.date(2018,5,10)]
+    df_co = df[['DateTime','co']].append(frame_CO)
+    df_ch4['#Site']='CMN'
+    df_co['#Site']='CMN'
+    return df_ch4, df_co
+    
+    
+    
 def get_baseline(spec):
     """ 
     read baseline for a given spec from data file 
@@ -159,11 +177,14 @@ def format_title_filenm(year, month, season, wd, day_night, suff, non_bkg):
         selection_filenm = selection_filenm + '_' + day_night_str
         table_filenm = table_filenm + '_' + day_night_str 
         dir_nm = dir_nm + day_night_str +'/'
-    if non_bkg:
+    if non_bkg: # NON-background case
         selection_string = selection_string + 'BaDS non-bkg ' + conf.non_bkg_specie
         selection_filenm = selection_filenm + '_non-bkg_'+ conf.non_bkg_specie
         table_filenm = table_filenm + '_non-bkg_'+ conf.non_bkg_specie
-
+    elif not non_bkg: # background case
+        selection_string = selection_string + 'BaDS bkg ' + conf.non_bkg_specie
+        selection_filenm = selection_filenm + '_bkg_'+ conf.non_bkg_specie
+        table_filenm = table_filenm + '_bkg_'+ conf.non_bkg_specie
     table_filenm = table_filenm +'.txt'
     plot_filenm  = dir_nm+'scatter_fit_'+suff+selection_filenm+'.pdf'
 
