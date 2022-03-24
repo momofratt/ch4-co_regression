@@ -70,7 +70,7 @@ def ortho_lin_regress(x, y, err_x, err_y):
     return out_odr, linreg, thsen_model
 
 
-def fit_and_scatter_plot(df, year, month, wd, day_night, plot, non_bkg):
+def fit_and_scatter_plot(df, year, month, wd, day_night, plot, non_bkg, robustness):
     """
     Perform orthogonal and linear fit on the FIRST and SECOND columns of df and returns scatter plot and best fit line
 
@@ -109,26 +109,29 @@ def fit_and_scatter_plot(df, year, month, wd, day_night, plot, non_bkg):
 
 
     ############## TEST FIT ROBUSTNESS THROUGH SUBSAMPLING ###################
-    robust=None
-    monthly_check_array = np.array([-999.99])
-    # n_iter = 100
-    # fraction = 0.4
-    # if wd == None:
-    #     #n_iter = 100
-    #     fraction = 0.2
-
-    # threshold = 0.3
-    # monthly_check_array = np.empty(0)
-    # for i in range(n_iter):
-    #     df_sub=df.sample(frac = fraction)
-    #     ort_res_sub, lin_res_sub, thsen_res_sub = ortho_lin_regress(df_sub[species[0]], df_sub[species[1]], df_sub[errors[0]], df_sub[errors[1]])
-    #     #monthly_check_array = np.append(monthly_check_array, ort_res_sub.beta[0]) # usa fit ortogonale
-    #     monthly_check_array = np.append(monthly_check_array, lin_res_sub[0])
-    # if np.std(monthly_check_array)/np.mean(monthly_check_array) < threshold:
-    #     robust = True
-    # else:
-    #     robust = False
-   
+    
+    if robustness: # test for robustness only on monthly regressions?
+        monthly_check_array = np.array([])
+        n_iter = 100
+        fraction = 0.4
+        if wd == None:
+            #n_iter = 100
+            fraction = 0.2
+    
+        threshold = 0.3
+        monthly_check_array = np.empty(0)
+        for i in range(n_iter):
+            df_sub=df.sample(frac = fraction)
+            ort_res_sub, lin_res_sub, thsen_res_sub = ortho_lin_regress(df_sub[species[0]], df_sub[species[1]], df_sub[errors[0]], df_sub[errors[1]])
+            #monthly_check_array = np.append(monthly_check_array, ort_res_sub.beta[0]) # usa fit ortogonale
+            monthly_check_array = np.append(monthly_check_array, lin_res_sub[0])
+        if np.std(monthly_check_array)/np.mean(monthly_check_array) < threshold:
+            robust = True
+        else:
+            robust = False
+    else:
+       robust=None
+       monthly_check_array = np.array([-999.99])
 
     ############## ############## ############## ############## ##############
 

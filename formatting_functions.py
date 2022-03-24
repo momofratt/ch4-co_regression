@@ -12,6 +12,7 @@ Created on Wed Oct 13 11:41:45 2021
 import pandas as pd
 import datetime as dt
 import config as conf
+
 def get_month_str(month_number):
     """ get month string from a given month number """
     if not type(month_number)==str: #if month is a string containing the season name, return only the string (e.g. DJF, MAM etc)
@@ -33,13 +34,14 @@ def read_L2_ICOS(file_path, file_name):
     out_frame = pd.read_csv(file_path+file_name, sep=';', skiprows = head_nlines-1)
     return out_frame
 
-def append_2018(frame_CH4, frame_CO):
+def append_2018(frame_CH4, frame_CO, MET_frame):
     """ add data from jan 2018 to may 2018 (not ICOS official data) """
     data_path = './L2_ICOS_data/Dati_CMN_201801-05/2018_CMN.dat'
     df = pd.read_csv(data_path, sep =' ', parse_dates={'DateTime':['DATE','TIME']}, usecols=['DATE','TIME','CO', 'CH4_cal'])
     df['DateTime']=pd.to_datetime(df['DateTime'], format="%Y-%m-%d %H:%M:%S")
     df = df.rename(columns={'CH4_cal':'ch4','CO':'co' })
-    df = df[ df['DateTime'].dt.date < dt.date(2018,5,10)]
+    df['co']=1000*df['co'] # convert to ppb
+    df = df[ df['DateTime'].dt.date < dt.date(2018,5,11)]
     frame_CH4 = frame_CH4[frame_CH4['DateTime'].dt.date > dt.date(2018,5,10)]
     df_ch4 = df[['DateTime','ch4']].append(frame_CH4)
     
@@ -47,7 +49,16 @@ def append_2018(frame_CH4, frame_CO):
     df_co = df[['DateTime','co']].append(frame_CO)
     df_ch4['#Site']='CMN'
     df_co['#Site']='CMN'
-    return df_ch4, df_co
+    
+    df_met = pd.read_csv('./L2_ICOS_data/Dati_CMN_201801-05/meteo/meteo_201801-05.dat', sep=' ', parse_dates={'DateTime':['YYYY','MM','DD','HH','MIN']}, usecols=['YYYY','MM','DD','HH','MIN','wd(deg)'])
+    df_met = df_met.rename(columns={'wd(deg)':'WD'})
+    df_met['DateTime'] = pd.to_datetime(df_met['DateTime'], format = '%Y %m %d %H %M')
+    df_met = df_met.resample('1H', on='DateTime').mean()
+    df_met.reset_index(inplace = True)
+    df_met = df_met[ df_met['DateTime'].dt.date < dt.date(2018,5,11)]
+    MET_frame = MET_frame[MET_frame['DateTime'].dt.date > dt.date(2018,5,10)]
+    df_met = df_met.append(MET_frame)
+    return df_ch4, df_co, df_met
     
     
     
@@ -85,7 +96,7 @@ def read_BADS_frame():
     specie = conf.non_bkg_specie # define wether to perform selection on co2, co or ch4. Can be either 'co2' or 'co+ch4'
     if specie == 'co2':
         bkg_cols = ['co2_bg2'] # name of the background column
-        df = pd.read_csv('./BaDS_baseline/'+conf.stat+'_2018-2021_co2_BaDSfit_annual_selection_mar22.csv', sep = ',', usecols = ['date'] + bkg_cols, parse_dates = {'DateTime' : ['date']}, na_values='NA')    
+        df = pd.read_csv('./BaDS_baseline/'+conf.stat+'_2018-2021_BaDSfit_annual_selection_n_5-2-5_mar22.csv', sep = ',', usecols = ['date'] + bkg_cols, parse_dates = {'DateTime' : ['date']}, na_values='NA')    
         df.insert(len(df.columns), 'bkg', False)
         df.loc[ df['co2_bg2'] > 0 , 'bkg'] = True
     
@@ -94,7 +105,7 @@ def read_BADS_frame():
             print('ERROR: no CO or CH4 bads results at LMP')
             os.sys.exit()
         bkg_cols = ['co_bg2', 'ch4_bg2'] # name of the background column
-        df = pd.read_csv('./BaDS_baseline/2018-2021_BaDSfit_annual_selection.csv', sep = ',', usecols = ['date'] + bkg_cols, parse_dates = {'DateTime' : ['date']}, na_values='NA')    
+        df = pd.read_csv('./BaDS_baseline/'+conf.stat+'_2018-2021_BaDSfit_annual_selection_n_5-2-5_mar22.csv', sep = ',', usecols = ['date'] + bkg_cols, parse_dates = {'DateTime' : ['date']}, na_values='NA')    
         #df = df[df['DateTime'] < dt.datetime(2021,1,1,0,0,0)] # remove data from 2021
         df.insert(len(df.columns), 'bkg', False)
         df.loc[ (df['co_bg2'] >0) & (df['ch4_bg2']>0) , 'bkg'] = True

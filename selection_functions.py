@@ -152,7 +152,7 @@ def select_non_bkg(df, non_bkg):
     
     return df
 
-def select_and_fit(df, year, month, season, wd, day_night, plot, bads_no_bkg):
+def select_and_fit(df, year, month, season, wd, day_night, plot, bads_no_bkg, robustness):
     """
     Select data in dataframe and run the fit_and_scatter_plot() function according to the input parameters
     
@@ -200,7 +200,7 @@ def select_and_fit(df, year, month, season, wd, day_night, plot, bads_no_bkg):
                     frame = select_wd(frame, wd=wd)
                     frame = select_non_bkg(frame, bads_no_bkg)
                     if len(frame) > 1:
-                        lrf.fit_and_scatter_plot(frame, year=year, month=mth, wd=wd, day_night=day_night, plot=plot, non_bkg = bads_no_bkg)
+                        lrf.fit_and_scatter_plot(frame, year=year, month=mth, wd=wd, day_night=day_night, plot=plot, non_bkg = bads_no_bkg, robustness=robustness)
             elif season:
                 # if (year == 2018) & (conf.stat=='CMN'): # skip missing first months in 2018 at CMN
                 #     seasons =['JJA','SON']
@@ -214,9 +214,9 @@ def select_and_fit(df, year, month, season, wd, day_night, plot, bads_no_bkg):
                     frame = select_wd(frame, wd=wd)
                     frame = select_non_bkg(frame, bads_no_bkg)
                     if len(frame) > 1:
-                        lrf.fit_and_scatter_plot(frame, year=year, month=seas, wd=wd, day_night=day_night, plot=plot, non_bkg = bads_no_bkg)
+                        lrf.fit_and_scatter_plot(frame, year=year, month=seas, wd=wd, day_night=day_night, plot=plot, non_bkg = bads_no_bkg, robustness=robustness)
 
 
             else:
                 frame = select_year(df, year)
-                lrf.fit_and_scatter_plot(frame, year=year, month=month, wd=wd, day_night=day_night, plot=plot, non_bkg = bads_no_bkg)
+                lrf.fit_and_scatter_plot(frame, year=year, month=month, wd=wd, day_night=day_night, plot=plot, non_bkg = bads_no_bkg, robustness=robustness)
