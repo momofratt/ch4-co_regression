@@ -38,9 +38,9 @@ def eval_ch4_emis(df, year, month, season, wd, day_night, region, bads_no_bkg, r
     species, suff = fmt.get_species_suffix(df)
     
     if month:
-        _,_,fit_table_nm = fmt.format_title_filenm(year=year, month=month, season=None,wd=wd, day_night=day_night, suff=suff, non_bkg=bads_no_bkg)
+        _,_,fit_table_nm = fmt.format_title_filenm(year=year, month=month, season=None,wd=wd, day_night=day_night, suff=suff, non_bkg=bads_no_bkg, robust=robustness)
     if season:
-        _,_,fit_table_nm = fmt.format_title_filenm(year=year, month=season, season=season, wd=wd, day_night=day_night, suff=suff, non_bkg=bads_no_bkg)
+        _,_,fit_table_nm = fmt.format_title_filenm(year=year, month=season, season=season, wd=wd, day_night=day_night, suff=suff, non_bkg=bads_no_bkg, robust=robustness)
     print('\nDATA AND PARAMETERS FOR CH4 ESTIMATION')
     print('fit result file = ' + fit_table_nm)
     fit_res_file = './'+conf.stat+'/res_fit/' + fit_table_nm

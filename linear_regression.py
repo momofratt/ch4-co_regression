@@ -19,7 +19,6 @@ import numpy as np
 CH4_frame     = fmt.read_L2_ICOS(conf.L2_ICOS_path,  conf.L2_name_prefix     + '.CH4')
 CO_frame      = fmt.read_L2_ICOS(conf.L2_ICOS_path,  conf.L2_name_prefix     + '.CO')
 MET_frame     = fmt.read_L2_ICOS(conf.L2_ICOS_path,  conf.L2_name_prefix     + '.MTO')
-BADS_frame    = fmt.read_BADS_frame()
 
 # CH4_nrt_frame = fmt.read_L2_ICOS(conf.L2_ICOS_path,  conf.L2_nrt_name_prefix + conf.gas_inst+'.CH4')
 # CO_nrt_frame  = fmt.read_L2_ICOS(conf.L2_ICOS_path,  conf.L2_nrt_name_prefix + conf.gas_inst+'.CO')
@@ -41,6 +40,7 @@ do_not_duplicate_cols = ['#Site', 'SamplingHeight'] # avoid duplicating these co
 data_frame = pd.merge(CH4_frame , CO_frame[CO_frame.columns.difference(do_not_duplicate_cols)]  , on='DateTime', suffixes=('_ch4','_co'))
 data_frame = pd.merge(data_frame, MET_frame[MET_frame.columns.difference(do_not_duplicate_cols)], on='DateTime', suffixes=('','_met'))
 if conf.stat=='CMN':
+    BADS_frame    = fmt.read_BADS_frame()
     data_frame = pd.merge(data_frame, BADS_frame, on='DateTime', suffixes=('','_met'))
     bg_cols = ['bkg']
 else:
@@ -93,51 +93,8 @@ co_ch4_frame = data_frame[['co', 'ch4','Stdev_co','Stdev_ch4','DateTime', 'WD'] 
 # co_ch4_frame = co_ch4_frame[(co_ch4_frame['co_baseline_delta'].notna()) & (co_ch4_frame['ch4_baseline_delta'].notna())] # retain only non nan delta values
 
 #### #### #### #### #### #### #### #### #### #### #### #### #### #### #### #### ####  
-
-##################          Emilia Romagna        ###########################
-
-######          YEARLY REGRESSIONS        ###############
-#sel.select_and_fit(co_ch4_frame, year=True, month=False, wd=None, day_night=None, plot=True)
-#evem.eval_ch4_emis(co_ch4_frame, year=True, month=False, wd=None, day_night=None, region='ER')
-
-# #######         MONTHLY REGRESSIONS       ###############
-# sel.select_and_fit(co_ch4_frame, year=True, month=True, wd=None, day_night=None, plot=True)
-# evem.eval_ch4_emis(co_ch4_frame, year=True, month=True, wd=None, day_night=None, region='ER')
-#evem.eval_ch4_monthly_emis(co_ch4_frame, year=True, month=True, wd=None, day_night=None, region='ER')
-
-# #######         MONTHLY REGRESSIONS  DAYTIME    ###############
-#sel.select_and_fit(co_ch4_frame, year=True, month=True, wd=None, day_night=True, plot=True)
-#evem.eval_ch4_emis(co_ch4_frame, year=True, month=True, wd=None, day_night=True, region='ER')
-#evem.eval_ch4_monthly_emis(co_ch4_frame, year=True, month=True, wd=None, day_night=True, region='ER')
-
-# #######         MONTHLY REGRESSIONS  NIGHTTIME  ###############
-#sel.select_and_fit(co_ch4_frame, year=True, month=True, wd=None, day_night=False, plot=True)
-#evem.eval_ch4_emis(co_ch4_frame, year=True, month=True, wd=None, day_night=False, region='ER')
-#evem.eval_ch4_monthly_emis(co_ch4_frame, year=True, month=True, wd=None, day_night=False, region='ER')
-
-# #######         MONTHLY REGRESSIONS  WD 20-70   ###############
-#sel.select_and_fit(co_ch4_frame, year=True, month=True, wd='20-70', day_night=None, plot=False)
-#evem.eval_ch4_emis(co_ch4_frame, year=True, month=True, wd='20-70', day_night=None, region='ER')
-#evem.eval_ch4_monthly_emis(co_ch4_frame, year=True, month=True, wd='20-70', day_night=None, region='ER')
-
-# #######         MONTHLY REGRESSIONS  WD 110-180   ###############
-# sel.select_and_fit(co_ch4_frame, year=True, month=True, wd='110-180', day_night=None, plot=False)
-# evem.eval_ch4_emis(co_ch4_frame, year=True, month=True, wd='110-180', day_night=None, region='ER')
-# evem.eval_ch4_monthly_emis(co_ch4_frame, year=True, month=True, wd='110-180', day_night=None, region='ER')
-
-
-# #######         MONTHLY REGRESSIONS  WD 310-80   ###############
-#sel.select_and_fit(co_ch4_frame, year=True, month=True, wd='310-80', day_night=None, plot=False)
-#evem.eval_ch4_emis(co_ch4_frame, year=True, month=True, wd='310-80', day_night=None, region='ER')
-#evem.eval_ch4_monthly_emis(co_ch4_frame, year=True, month=True, wd='310-80', day_night=None, region='ER')
-
-# #######         MONTHLY REGRESSIONS  WD 310-80  DAYTIME  ###############
-#sel.select_and_fit(co_ch4_frame, year=True, month=True, wd='310-80', day_night=True, plot=False)
-# evem.eval_ch4_emis(co_ch4_frame, year=True, month=True, wd='310-80', day_night=True, region='ER')
-
-# #######         MONTHLY REGRESSIONS  WD 310-80  NIGHTTIME ###############
-#sel.select_and_fit(co_ch4_frame, year=True, month=True, wd='310-80', day_night=False, plot=False)
-# evem.eval_ch4_emis(co_ch4_frame, year=True, month=True, wd='310-80', day_night=False, region='ER')
+co_ch4_frame = co_ch4_frame[co_ch4_frame['co'].notna()]
+co_ch4_frame = co_ch4_frame[co_ch4_frame['ch4'].notna()]
 
 
 ##################          Toscana       ###########################
@@ -149,33 +106,35 @@ co_ch4_frame = data_frame[['co', 'ch4','Stdev_co','Stdev_ch4','DateTime', 'WD'] 
 # # evem.eval_ch4_monthly_emis(co_ch4_frame, year=True, month=True, wd='310-80', day_night=None, region='TOS')
 
 # # #######         MONTHLY REGRESSIONS  WD 110-270  ###############
-# sel.select_and_fit(co_ch4_frame, year=True, month=False,  season=True, wd='110-270', day_night=None, plot=True, bads_no_bkg=True)
-# evem.eval_ch4_emis(co_ch4_frame, year=True, month=False,  season=True, wd='110-270', day_night=None, region='TOS', bads_no_bkg=True)
-# evem.eval_ch4_monthly_emis(co_ch4_frame, year=True, month=True, wd='110-180', day_night=None, region='TOS')
+# sel.select_and_fit(co_ch4_frame, year=True, month=False, season=True, wd='110-270', day_night=None, plot=True, bads_no_bkg=True, robustness=True)
+# evem.eval_ch4_emis(co_ch4_frame, year=True, month=False, season=True, wd='110-270', day_night=None, region='TOS', bads_no_bkg=True, robustness=True)
 
 ##################          Po Valley         ###########################
 
 ######          SEASON REGRESSIONS        ###############
-sel.select_and_fit(co_ch4_frame, year=True, month=True, season=False, wd=None, day_night=None, plot=True, bads_no_bkg=False, robustness=True)
-evem.eval_ch4_emis(co_ch4_frame, year=True, month=True, season=False, wd=None, day_night=None, region='PO', bads_no_bkg=False, robustness=True)
+sel.select_and_fit(co_ch4_frame, year=True, month=False, season=True, wd=None, day_night=None, plot=True, bads_no_bkg=None, robustness=True)
+evem.eval_ch4_emis(co_ch4_frame, year=True, month=False, season=True, wd=None, day_night=None, region='PO', bads_no_bkg=None, robustness=True)
 
 #######         MONTHLY REGRESSIONS       ###############
-# sel.select_and_fit(co_ch4_frame, year=True, month=True, wd=None, day_night=None, plot=True, bads_no_bkg=True)
-# evem.eval_ch4_emis(co_ch4_frame, year=True, month=True, wd=None, day_night=None, region='PO', bads_no_bkg=True)
+sel.select_and_fit(co_ch4_frame, year=True, month=True, season=False, wd=None, day_night=None, plot=True, bads_no_bkg=None, robustness=True)
+evem.eval_ch4_emis(co_ch4_frame, year=True, month=True, season=False, wd=None, day_night=None, region='PO', bads_no_bkg=None, robustness=True)
+
 # evem.eval_ch4_monthly_emis(co_ch4_frame, year=True, month=True, wd=None, day_night=None, region='PO', bads_no_bkg=True) 
 
 # # #######         MONTHLY REGRESSIONS  WD 310-80   ###############
-sel.select_and_fit(co_ch4_frame, year=True, month=True, season=False, wd='310-80', day_night=None, plot=True, bads_no_bkg=False, robustness=True)
-evem.eval_ch4_emis(co_ch4_frame, year=True, month=True, season=False, wd='310-80', day_night=None, region='PO', bads_no_bkg=False, robustness=True)
-# #evem.eval_ch4_monthly_emis(co_ch4_frame, year=True, month=True, wd='310-80', day_night=None, region='PO', bads_no_bkg=True)
+# sel.select_and_fit(co_ch4_frame, year=True, month=True, season=False, wd='310-80', day_night=None, plot=True, bads_no_bkg=None, robustness=True)
+# evem.eval_ch4_emis(co_ch4_frame, year=True, month=True, season=False, wd='310-80', day_night=None, region='PO', bads_no_bkg=None, robustness=True)
+
+# sel.select_and_fit(co_ch4_frame, year=True, month=False, season=True, wd='310-80', day_night=None, plot=True, bads_no_bkg=None, robustness=True)
+# evem.eval_ch4_emis(co_ch4_frame, year=True, month=False, season=True, wd='310-80', day_night=None, region='PO', bads_no_bkg=None, robustness=True)
 
 # # #######         MONTHLY REGRESSIONS  WD 310-80 DAYTIME   ###############
 # sel.select_and_fit(co_ch4_frame, year=True, month=False, season=True, wd='310-80', day_night=True, plot=True, bads_no_bkg=True)
 # evem.eval_ch4_emis(co_ch4_frame, year=True, month=False, season=True, wd='310-80', day_night=True, region='PO', bads_no_bkg=True)
 
 # # # #######         MONTHLY REGRESSIONS  WD 110-270   ###############
-# sel.select_and_fit(co_ch4_frame, year=True, month=False, season=True, wd='110-270', day_night=None, plot=True, bads_no_bkg=True)
-# evem.eval_ch4_emis(co_ch4_frame, year=True, month=False, season=True, wd='110-270', day_night=None, region='PO', bads_no_bkg=True)
+# sel.select_and_fit(co_ch4_frame, year=True, month=False, season=True, wd='110-270', day_night=None, plot=True, bads_no_bkg=True, robustness=True)
+# evem.eval_ch4_emis(co_ch4_frame, year=True, month=False, season=True, wd='110-270', day_night=None, region='PO', bads_no_bkg=True, robustness=False)
 # # evem.eval_ch4_monthly_emis(co_ch4_frame, year=True, month=True, wd='110-270', day_night=None, region='PO')
 
 

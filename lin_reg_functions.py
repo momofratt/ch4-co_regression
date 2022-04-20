@@ -94,7 +94,7 @@ def fit_and_scatter_plot(df, year, month, wd, day_night, plot, non_bkg, robustne
     # define columns and format titles and filenames
 
     species, suff = fmt.get_species_suffix(df)
-    selection_string, plot_filenm, table_filenm = fmt.format_title_filenm(year, month, None,wd, day_night, suff, non_bkg)
+    selection_string, plot_filenm, table_filenm = fmt.format_title_filenm(year, month, None,wd, day_night, suff, non_bkg, robustness)
     errors = ['Stdev_co','Stdev_ch4']
     df.loc[ df[errors[0]]==0, errors[0]] = np.nan
     df.loc[ df[errors[1]]==0, errors[1]] = np.nan

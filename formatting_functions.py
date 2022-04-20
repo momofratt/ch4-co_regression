@@ -131,7 +131,7 @@ def insert_datetime_col(df, pos,Y,M,D,h,m):
     df.insert(pos, 'DateTime', pd.to_datetime(df[[Y,M,D,h,m]]) )
     del(df[Y], df[M], df[D], df[h], df[m] )
     
-def format_title_filenm(year, month, season, wd, day_night, suff, non_bkg):
+def format_title_filenm(year, month, season, wd, day_night, suff, non_bkg, robust):
     """
     create string where are reported the performed selections (used in the scatterplot titles) and the 
     filenames for the results of the performed selection
@@ -196,6 +196,10 @@ def format_title_filenm(year, month, season, wd, day_night, suff, non_bkg):
         selection_string = selection_string + 'BaDS bkg ' + conf.non_bkg_specie
         selection_filenm = selection_filenm + '_bkg_'+ conf.non_bkg_specie
         table_filenm = table_filenm + '_bkg_'+ conf.non_bkg_specie
+    if robust:
+        selection_string = selection_string + '_robust' 
+        selection_filenm = selection_filenm + '_robust'
+        table_filenm = table_filenm + '_robust' 
     table_filenm = table_filenm +'.txt'
     plot_filenm  = dir_nm+'scatter_fit_'+suff+selection_filenm+'.pdf'
 

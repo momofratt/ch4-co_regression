@@ -141,7 +141,7 @@ def select_non_bkg(df, non_bkg):
     if non_bkg: # NON-background case
         #df = df[(df['co_bg']==False) & (df['ch4_bg']==False)]
         df = df[(df['bkg']==False)]
-    elif not non_bkg: # background case
+    elif non_bkg == False: # background case
         df = df[(df['bkg']==True)]
     
     if (non_bkg==True) | (non_bkg==False) :
@@ -177,7 +177,7 @@ def select_and_fit(df, year, month, season, wd, day_night, plot, bads_no_bkg, ro
     """
     # get the name of older fit results files
     species, suff = fmt.get_species_suffix(df) 
-    _, _, table_filenm = fmt.format_title_filenm(year, month, season, wd, day_night, suff, bads_no_bkg)
+    _, _, table_filenm = fmt.format_title_filenm(year, month, season, wd, day_night, suff, bads_no_bkg, robustness)
 
     if os.path.exists('./'+conf.stat+'/res_fit/'+table_filenm): # remove older fit results 
         os.remove('./'+conf.stat+'/res_fit/'+table_filenm)
