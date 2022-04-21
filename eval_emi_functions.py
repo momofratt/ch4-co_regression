@@ -60,14 +60,16 @@ def eval_ch4_emis(df, year, month, season, wd, day_night, region, bads_no_bkg, r
         
         if robustness:
             if not season:
-                avg_slope = fit_frame[(fit_frame['year']==year)& (fit_frame['robust']==True)]['slope'].mean() # use only robust months
+                avg_slope = fit_frame[(fit_frame['year']==year) & (fit_frame['robust']==True)]['slope'].mean() # use only robust months
             else:
-                avg_slope = fit_frame[(fit_frame['year']==year)& (fit_frame['robust']==True)]['slope'].mean() # use only robust months
-        else:
+                avg_slope = fit_frame[(fit_frame['year']==year) & (fit_frame['robust']==True)]['slope'].mean() # use only robust months
+        else: # should consider only seasonal fit with r2>0.6? In case you could loose one over 4 season each year!
             if not season:
-                avg_slope = fit_frame[(fit_frame['year']==year)]['slope'].mean()
+                avg_slope = fit_frame[(fit_frame['year']==year) ]['slope'].mean()
+                #avg_slope = fit_frame[(fit_frame['year']==year) & (fit_frame['r2']>0.6)]['slope'].mean()
             else:
-                avg_slope = fit_frame[(fit_frame['year']==year)]['slope'].mean() 
+                avg_slope = fit_frame[(fit_frame['year']==year) ]['slope'].mean() 
+                #avg_slope = fit_frame[(fit_frame['year']==year) & (fit_frame['r2']>0.6)]['slope'].mean() 
         print(year, round(avg_slope,2))
         ch4_emi.append( avg_slope * emi_co_frame[emi_co_frame['year']==year]['emi[t]'] * Mch4 / Mco )
     

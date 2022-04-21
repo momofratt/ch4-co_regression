@@ -16,6 +16,7 @@ import lin_reg_functions as lrf
 import formatting_functions as fmt
 import os
 import config as conf
+from pandas import concat
 
 def select_year(df, year):
     """ select one year of data
@@ -70,8 +71,8 @@ def select_season(df, year, seas):
         out_df = df[(df['DateTime'].dt.year==year) & ((df['DateTime'].dt.month==9)|(df['DateTime'].dt.month==10)|(df['DateTime'].dt.month==11))]
     if seas == 'DJF':
         out_df = df[(df['DateTime'].dt.year==year) & (df['DateTime'].dt.month==12)]
-        out_df = out_df.append(df[ (df['DateTime'].dt.year==year+1) & ((df['DateTime'].dt.month==1)|(df['DateTime'].dt.month==2))])
-
+        #out_df = out_df.append(df[ (df['DateTime'].dt.year==year+1) & ((df['DateTime'].dt.month==1)|(df['DateTime'].dt.month==2))])
+        out_df = concat([out_df,df[ (df['DateTime'].dt.year==year+1) & ((df['DateTime'].dt.month==1)|(df['DateTime'].dt.month==2))]])
     return out_df
 
 

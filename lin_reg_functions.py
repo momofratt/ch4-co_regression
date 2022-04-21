@@ -61,7 +61,7 @@ def ortho_lin_regress(x, y, err_x, err_y):
     out_odr = od.run()
     
     #thsen_model = make_pipeline(PolynomialFeatures(1), TheilSenRegressor(random_state=42))
-    thsen_model = TheilSenRegressor(random_state=42, max_iter = 10000)
+    thsen_model = TheilSenRegressor(random_state=42, max_iter = 1000)
     x = np.array(x)[:, np.newaxis]
     y = np.array(y)
     thsen_model.fit(x, y)

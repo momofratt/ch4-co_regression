@@ -43,10 +43,12 @@ def append_2018(frame_CH4, frame_CO, MET_frame):
     df['co']=1000*df['co'] # convert to ppb
     df = df[ df['DateTime'].dt.date < dt.date(2018,5,11)]
     frame_CH4 = frame_CH4[frame_CH4['DateTime'].dt.date > dt.date(2018,5,10)]
-    df_ch4 = df[['DateTime','ch4']].append(frame_CH4)
-    
+   # df_ch4 = df[['DateTime','ch4']].append(frame_CH4)
+    df_ch4 = pd.concat([df[['DateTime','ch4']],frame_CH4], ignore_index=True)
     frame_CO = frame_CO[frame_CO['DateTime'].dt.date > dt.date(2018,5,10)]
-    df_co = df[['DateTime','co']].append(frame_CO)
+    # df_co = df[['DateTime','co']].append(frame_CO)
+    df_co = pd.concat([df[['DateTime','co']],frame_CO], ignore_index=True)
+    
     df_ch4['#Site']='CMN'
     df_co['#Site']='CMN'
     
@@ -57,7 +59,9 @@ def append_2018(frame_CH4, frame_CO, MET_frame):
     df_met.reset_index(inplace = True)
     df_met = df_met[ df_met['DateTime'].dt.date < dt.date(2018,5,11)]
     MET_frame = MET_frame[MET_frame['DateTime'].dt.date > dt.date(2018,5,10)]
-    df_met = df_met.append(MET_frame)
+    # df_met = df_met.append(MET_frame)
+    df_met = pd.concat([MET_frame,df_met], ignore_index=True)
+    
     return df_ch4, df_co, df_met
     
     
@@ -192,7 +196,7 @@ def format_title_filenm(year, month, season, wd, day_night, suff, non_bkg, robus
         selection_string = selection_string + 'BaDS non-bkg ' + conf.non_bkg_specie
         selection_filenm = selection_filenm + '_non-bkg_'+ conf.non_bkg_specie
         table_filenm = table_filenm + '_non-bkg_'+ conf.non_bkg_specie
-    elif not non_bkg: # background case
+    elif non_bkg==False: # background case
         selection_string = selection_string + 'BaDS bkg ' + conf.non_bkg_specie
         selection_filenm = selection_filenm + '_bkg_'+ conf.non_bkg_specie
         table_filenm = table_filenm + '_bkg_'+ conf.non_bkg_specie
