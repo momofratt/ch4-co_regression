@@ -14,6 +14,12 @@ import pandas as pd
 import formatting_functions as fmt
 from numpy import arange
 import config as conf
+import selection_functions as sel
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+import seaborn
+import matplotlib.ticker as mticker
+from matplotlib import rcParams, rcParamsDefault
 
 def eval_ch4_emis(df, year, month, season, wd, day_night, region, bads_no_bkg, robustness):
     """
@@ -192,12 +198,81 @@ def eval_ch4_monthly_emis(df, year, month, wd, day_night, region, bads_no_bkg):
     print('output plot: CH4_CO_'+region+'_estimated_emissions'+plot_nm_suffix+'.pdf')
 
     
+def boxplot(df, wd=None, bads_no_bkg=None):
+    # df = df[['DateTime','co','ch4','WD','bkg']]
+    df = sel.select_wd(df, wd)
+    if (bads_no_bkg!=None) & (conf.stat=='CMN'):
+       df = sel.select_non_bkg(df,bads_no_bkg) 
+    df=df.set_index('DateTime')
+    df = df[df['ch4']<4000]
+    df.insert(3,'ch4_co', df['ch4']/df['co'])
+    #df=df.resample('1d').mean().resample('1m').mean()
+    df.index = df.index.date - pd.offsets.MonthBegin(1) # riporta tutto al primo giorno del mese
+    df.insert(1,'month',df.index.strftime('%Y-%m'))
+    
+    plt.style.use('seaborn-white')
+    plt.rc('font', size=30) #controls default text size
+
+    fig,ax = plt.subplots(3,1, figsize=(20,20))
+    cols = ['ch4','co','ch4_co']
+    colors = ['#70a1c2', '#aab16b', '#a17a8d']
+    labels = ['CH$_4$ [ppb]', 'CO [ppb]', 'CH$_4$/CO [-]']
+    myLocator = mticker.MultipleLocator(3)
+    mylocator = mticker.MultipleLocator(1)
+
+    for i in range(len(cols)):
+        seaborn.boxplot(ax=ax[i],x='month', y = cols[i], data=df, color=colors[i], showfliers=False) 
+        ax[i].grid(which='both') 
+        ax[i].set_ylabel(labels[i])
+        ax[i].xaxis.set_major_locator(myLocator)
+        ax[i].xaxis.set_minor_locator(mylocator)
+
+    ax[2].set_xlabel('')       
+    fig.autofmt_xdate(rotation=45)
     
     
+    title = 'Monthly CH$_4$ and CO Concentrations and CH$_4$/CO Ratio at '+conf.stat+'\n'
+    filename_str=''
+    if wd!=None:
+        title = title +'WD = '+wd
+        filename_str=filename_str+'wd'+wd+'_'
+    if (bads_no_bkg==True) & (conf.stat=='CMN'):
+        title = title + '  during non-bkg conditions'
+        filename_str=filename_str+'non-bkg'
+
+    if (bads_no_bkg==False) & (conf.stat=='CMN'):
+        title = title + '  during bkg conditions'
+        filename_str=filename_str+'bkg'
+
+    fig.subplots_adjust(hspace=0.1)
+    fig.suptitle(title, fontsize=30)
+    plt.savefig('./'+conf.stat+'/boxplot_'+conf.stat+'_'+filename_str+'.png')   
+    rcParams.update(rcParamsDefault)
     
     
-    
-    
+    # fig = make_subplots(rows=3, cols=1, horizontal_spacing = 0.0)
+    # for i in range(len(cols)):
+    #     x_data=[]
+    #     y_data=[]
+    #     for month in df[cols[i]].resample('1m'):
+    #         x_data.append(str(month[0].year) +'-'+ str(month[0].month))
+    #         y_data.append(list(month[1]))
+        
+    #     for xd, yd in zip(x_data, y_data):    
+    #         fig.add_trace(go.Box(
+    #             name=xd,
+    #             y=yd,
+    #             marker_color=colors[i],
+    #             boxpoints='outliers',
+    #             jitter=0.2,
+    #             pointpos=0,
+    #             whiskerwidth=0.2,
+    #             marker_size=2,
+    #             line_width=1),
+    #             row=1+i, col=1
+    #         )
+    #fig.write_html('box.html')
+    #print(yd)
     
     
     

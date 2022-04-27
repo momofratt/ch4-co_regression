@@ -100,6 +100,11 @@ co_ch4_frame = data_frame[['co', 'ch4','Stdev_co','Stdev_ch4','DateTime', 'WD'] 
 co_ch4_frame = co_ch4_frame[co_ch4_frame['co'].notna()]
 co_ch4_frame = co_ch4_frame[co_ch4_frame['ch4'].notna()]
 
+##################       boxplot mensili      ##################
+evem.boxplot(co_ch4_frame, wd=None, bads_no_bkg=None)
+evem.boxplot(co_ch4_frame, wd=None, bads_no_bkg=False)
+evem.boxplot(co_ch4_frame, wd='310-80', bads_no_bkg=False)
+evem.boxplot(co_ch4_frame, wd='310-80', bads_no_bkg=True)
 
 ##################          Toscana       ###########################
 # sel.select_and_fit(co_ch4_frame, year=True, month=False,  season=True, wd=None, day_night=None, plot=True, bads_no_bkg=True)
@@ -116,8 +121,8 @@ co_ch4_frame = co_ch4_frame[co_ch4_frame['ch4'].notna()]
 ##################          Po Valley         ###########################
 
 ######          SEASON REGRESSIONS        ###############
-sel.select_and_fit(co_ch4_frame, year=True, month=False, season=True, wd=None, day_night=None, plot=True, bads_no_bkg=True, robustness=True)
-evem.eval_ch4_emis(co_ch4_frame, year=True, month=False, season=True, wd=None, day_night=None, region='PO', bads_no_bkg=True, robustness=True)
+sel.select_and_fit(co_ch4_frame, year=True, month=False, season=True, wd=None, day_night=None, plot=True, bads_no_bkg=None, robustness=True)
+evem.eval_ch4_emis(co_ch4_frame, year=True, month=False, season=True, wd=None, day_night=None, region='PO', bads_no_bkg=None, robustness=True)
 
 #######         MONTHLY REGRESSIONS       ###############
 # sel.select_and_fit(co_ch4_frame, year=True, month=True, season=False, wd=None, day_night=None, plot=True, bads_no_bkg=None, robustness=True)
@@ -126,8 +131,8 @@ evem.eval_ch4_emis(co_ch4_frame, year=True, month=False, season=True, wd=None, d
 # evem.eval_ch4_monthly_emis(co_ch4_frame, year=True, month=True, wd=None, day_night=None, region='PO', bads_no_bkg=True) 
 
 # # #######         MONTHLY REGRESSIONS  WD 310-80   ###############
-sel.select_and_fit(co_ch4_frame, year=True, month=False, season=True, wd='310-80', day_night=None, plot=True, bads_no_bkg=True, robustness=True)
-evem.eval_ch4_emis(co_ch4_frame, year=True, month=False, season=True, wd='310-80', day_night=None, region='PO', bads_no_bkg=True, robustness=True)
+# sel.select_and_fit(co_ch4_frame, year=True, month=False, season=True, wd='310-80', day_night=None, plot=True, bads_no_bkg=True, robustness=True)
+# evem.eval_ch4_emis(co_ch4_frame, year=True, month=False, season=True, wd='310-80', day_night=None, region='PO', bads_no_bkg=True, robustness=True)
 
 # sel.select_and_fit(co_ch4_frame, year=True, month=False, season=True, wd='310-80', day_night=None, plot=True, bads_no_bkg=None, robustness=True)
 # evem.eval_ch4_emis(co_ch4_frame, year=True, month=False, season=True, wd='310-80', day_night=None, region='PO', bads_no_bkg=None, robustness=True)
@@ -136,9 +141,9 @@ evem.eval_ch4_emis(co_ch4_frame, year=True, month=False, season=True, wd='310-80
 # sel.select_and_fit(co_ch4_frame, year=True, month=False, season=True, wd='310-80', day_night=True, plot=True, bads_no_bkg=True)
 # evem.eval_ch4_emis(co_ch4_frame, year=True, month=False, season=True, wd='310-80', day_night=True, region='PO', bads_no_bkg=True)
 
-# # # #######         MONTHLY REGRESSIONS  WD 110-270   ###############
-sel.select_and_fit(co_ch4_frame, year=True, month=False, season=True, wd='110-270', day_night=None, plot=True, bads_no_bkg=True, robustness=True)
-evem.eval_ch4_emis(co_ch4_frame, year=True, month=False, season=True, wd='110-270', day_night=None, region='PO', bads_no_bkg=True, robustness=True)
+# # # # #######         MONTHLY REGRESSIONS  WD 110-270   ###############
+# sel.select_and_fit(co_ch4_frame, year=True, month=False, season=True, wd='110-270', day_night=None, plot=True, bads_no_bkg=True, robustness=True)
+# evem.eval_ch4_emis(co_ch4_frame, year=True, month=False, season=True, wd='110-270', day_night=None, region='PO', bads_no_bkg=True, robustness=True)
 # # evem.eval_ch4_monthly_emis(co_ch4_frame, year=True, month=True, wd='110-270', day_night=None, region='PO')
 
 
