@@ -20,6 +20,8 @@ from plotly.subplots import make_subplots
 import seaborn
 import matplotlib.ticker as mticker
 from matplotlib import rcParams, rcParamsDefault
+import numpy as np
+from scipy.optimize import curve_fit as cf
 
 def eval_ch4_emis(df, year, month, season, wd, day_night, region, bads_no_bkg, robustness):
     """
@@ -206,9 +208,9 @@ def boxplot(df, wd=None, bads_no_bkg=None):
     df=df.set_index('DateTime')
     df = df[df['ch4']<4000]
     df.insert(3,'ch4_co', df['ch4']/df['co'])
-    #df=df.resample('1d').mean().resample('1m').mean()
+    df=df.resample('1d').mean()
     df.index = df.index.date - pd.offsets.MonthBegin(1) # riporta tutto al primo giorno del mese
-    df.insert(1,'month',df.index.strftime('%Y-%m'))
+    df.insert(1,'month',df.index.strftime('%Y-%m')) # insert month column for the boxplot
     
     plt.style.use('seaborn-white')
     plt.rc('font', size=30) #controls default text size
@@ -221,7 +223,9 @@ def boxplot(df, wd=None, bads_no_bkg=None):
     mylocator = mticker.MultipleLocator(1)
 
     for i in range(len(cols)):
-        seaborn.boxplot(ax=ax[i],x='month', y = cols[i], data=df, color=colors[i], showfliers=False) 
+        seaborn.boxplot(ax=ax[i],x='month', y = cols[i], data=df, color=colors[i], showfliers=True) 
+        #seaborn.swarmplot(ax=ax[i],x='month', y = cols[i], data=df, color='.25') 
+
         ax[i].grid(which='both') 
         ax[i].set_ylabel(labels[i])
         ax[i].xaxis.set_major_locator(myLocator)
@@ -248,37 +252,84 @@ def boxplot(df, wd=None, bads_no_bkg=None):
     fig.suptitle(title, fontsize=30)
     plt.savefig('./'+conf.stat+'/boxplot_'+conf.stat+'_'+filename_str+'.png')   
     rcParams.update(rcParamsDefault)
+
+def fit_season_emissions(df, wd=None, bads_no_bkg=None):
+    # select WD and bkg
+    df = sel.select_wd(df, wd)
+    if (bads_no_bkg!=None) & (conf.stat=='CMN'):
+       df = sel.select_non_bkg(df,bads_no_bkg) 
+    df=df.set_index('DateTime')
+    df = df[df['ch4']<4000]
+    df.insert(3,'ch4_co', df['ch4']/df['co'])
+    
+    df = df[(df.index.year >= conf.years[0]) & (df.index.year <= conf.years[-1])] # use only selected years (avoid eventual residual months that are present in the dataset)    
+    
+    mean_co   = []
+    mean_ch4  = []
+    mean_ratio= []
+    df = df.resample('1d').mean().resample('1m').mean()
+    months = np.arange(1,13)
+    for i in months:
+        mean_co.append(df[df.index.month==i]['co'].mean())
+        mean_ch4.append(df[df.index.month==i]['ch4'].mean())
+        mean_ratio.append(df[df.index.month==i]['ch4'].mean()/df[df.index.month==i]['co'].mean())
     
     
-    # fig = make_subplots(rows=3, cols=1, horizontal_spacing = 0.0)
-    # for i in range(len(cols)):
-    #     x_data=[]
-    #     y_data=[]
-    #     for month in df[cols[i]].resample('1m'):
-    #         x_data.append(str(month[0].year) +'-'+ str(month[0].month))
-    #         y_data.append(list(month[1]))
+    # fit
+    def sin_fun(x,a,b,c):
+        return a*np.sin(b*x)+c
+    p_opt = [[]for i in range(3)]
+    p_cov = [[]for i in range(3)]
+
+    i=0
+    for ydata in [mean_co, mean_ch4,mean_ratio]:
+        p_opt[i],p_cov[i]=cf(sin_fun,months,ydata, p0=(10, 0.5, 100))
+        print(p_opt[i])
+        i=i+1
+       
+    
+    # plot results
+    
+    fig,ax=plt.subplots(3,1, figsize=(7,7))
+    point_size=30
+    ax[0].scatter(months, mean_co, color='C0', s=point_size)
+    ax[0].set_ylim(0.8*min(mean_co), 1.2*max(mean_co))
+    ax[0].set_ylabel('CO [ppb]')
+    ax[0].plot(months,sin_fun(months,*p_opt[0]), c='C0')
+    
+    ax[1].scatter(months, mean_ch4, color='C1', s=point_size)
+    ax[1].set_ylim(0.99*min(mean_ch4), 1.01*max(mean_ch4))
+    ax[1].set_ylabel('CH$_4$ [ppb]')
+    ax[1].plot(months,sin_fun(months,*p_opt[1]), c='C1')
+
+    ax[2].scatter(months, mean_ratio, color='C2', s=point_size)
+    ax[2].set_ylim(0.8*min(mean_ratio), 1.2*max(mean_ratio))
+    ax[2].set_ylabel('CH$_4$/CO [-]')
+    ax[2].plot(months,sin_fun(months,*p_opt[2]), c='C2')
+
+    xlabels=['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug','Sep','Oct','Nov','Dec']
+    
+    for axis in ax:
+        axis.set_xticks(months)
+        axis.grid()
+    ax[2].set_xticklabels(xlabels)
+    fig.autofmt_xdate(rotation=45)
+    
+    title = 'Monthly mean CH$_4$ and CO Concentrations and CH$_4$/CO Ratio at '+conf.stat+'\nover the period '+str(conf.years[0])+'-'+str(conf.years[-1])
+    filename_str=''
+    if wd!=None:
+        title = title +'WD = '+wd
+        filename_str=filename_str+'wd'+wd+'_'
+    if (bads_no_bkg==True) & (conf.stat=='CMN'):
+        title = title + '  during non-bkg conditions'
+        filename_str=filename_str+'non-bkg'
+
+    if (bads_no_bkg==False) & (conf.stat=='CMN'):
+        title = title + '  during bkg conditions'
+        filename_str=filename_str+'bkg'
+    fig.suptitle(title)
+    plt.savefig('./'+conf.stat+'/fit_'+conf.stat+'_'+filename_str+'.png')   
         
-    #     for xd, yd in zip(x_data, y_data):    
-    #         fig.add_trace(go.Box(
-    #             name=xd,
-    #             y=yd,
-    #             marker_color=colors[i],
-    #             boxpoints='outliers',
-    #             jitter=0.2,
-    #             pointpos=0,
-    #             whiskerwidth=0.2,
-    #             marker_size=2,
-    #             line_width=1),
-    #             row=1+i, col=1
-    #         )
-    #fig.write_html('box.html')
-    #print(yd)
-    
-    
-    
-    
-    
-    
     
     
     
