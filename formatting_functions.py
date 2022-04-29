@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Wed Oct 13 11:41:45 2021
@@ -135,7 +134,7 @@ def insert_datetime_col(df, pos,Y,M,D,h,m):
     df.insert(pos, 'DateTime', pd.to_datetime(df[[Y,M,D,h,m]]) )
     del(df[Y], df[M], df[D], df[h], df[m] )
     
-def format_title_filenm(year, month, season, wd, day_night, suff, non_bkg, robust):
+def format_title_filenm(year, month, season, wd, day_night, suff, non_bkg, robust, custom_station='', non_bkg_specie=''):
     """
     create string where are reported the performed selections (used in the scatterplot titles) and the 
     filenames for the results of the performed selection
@@ -150,6 +149,12 @@ def format_title_filenm(year, month, season, wd, day_night, suff, non_bkg, robus
         daynight selection. ==True for day selection, ==False for night selection, ==None if no selection has been performed
     suff : str
         suffix for file and plot names.
+    custom_station: str
+        choose wether to return names for the station that is defined in the config file or for a selected station. e.g. if 'CMN' if will return results for 
+        CMN station, wether or not 'CMN' is set as station in the config file. This option can be used only with evem.eval_ch4_emi_compact() function. The default is ''
+    non_bkg_specie: str
+        same as custom_station: it is used to select a custom station instead of the one defined in the config file. This variable must be defined in accordance to custom_station
+        in order to avoid conflicts
     Returns
     -------
     selection_string, plot_filenm, table_filenm: str
@@ -161,8 +166,16 @@ def format_title_filenm(year, month, season, wd, day_night, suff, non_bkg, robus
         day_night_str='night'
     elif day_night == None:
         day_night_str=''
-
-    stat=conf.stat
+    
+    if custom_station != '':
+        stat=custom_station
+    else:
+        stat=conf.stat
+    if non_bkg_specie!='':
+        non_bkg_specie = non_bkg_specie
+    else:
+        non_bkg_specie = conf.non_bkg_specie
+        
     selection_string = ''
     selection_filenm = ''
     dir_nm = ''
@@ -193,13 +206,13 @@ def format_title_filenm(year, month, season, wd, day_night, suff, non_bkg, robus
         table_filenm = table_filenm + '_' + day_night_str 
         dir_nm = dir_nm + day_night_str +'/'
     if non_bkg: # NON-background case
-        selection_string = selection_string + 'BaDS non-bkg ' + conf.non_bkg_specie
-        selection_filenm = selection_filenm + '_non-bkg_'+ conf.non_bkg_specie
-        table_filenm = table_filenm + '_non-bkg_'+ conf.non_bkg_specie
+        selection_string = selection_string + 'BaDS non-bkg ' + non_bkg_specie
+        selection_filenm = selection_filenm + '_non-bkg_'+ non_bkg_specie
+        table_filenm = table_filenm + '_non-bkg_'+ non_bkg_specie
     elif non_bkg==False: # background case
-        selection_string = selection_string + 'BaDS bkg ' + conf.non_bkg_specie
-        selection_filenm = selection_filenm + '_bkg_'+ conf.non_bkg_specie
-        table_filenm = table_filenm + '_bkg_'+ conf.non_bkg_specie
+        selection_string = selection_string + 'BaDS bkg ' + non_bkg_specie
+        selection_filenm = selection_filenm + '_bkg_'+ non_bkg_specie
+        table_filenm = table_filenm + '_bkg_'+ non_bkg_specie
     if robust:
         selection_string = selection_string + '_robust' 
         selection_filenm = selection_filenm + '_robust'

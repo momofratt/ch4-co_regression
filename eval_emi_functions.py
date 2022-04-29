@@ -23,43 +23,29 @@ from matplotlib import rcParams, rcParamsDefault
 import numpy as np
 from scipy.optimize import curve_fit as cf
 
-def eval_ch4_emis(df, year, month, season, wd, day_night, region, bads_no_bkg, robustness):
+def get_ch4_emis_list(region, fit_frame, robustness, season, custom_years=''):
     """
-    Evaluate CH4 emission using CO emissions and the fit results
-    
-    Parameters
-    ----------
-    year, month: bool
-        define if yearly and month selection has been performed (True/False)
-    wd: str
-        string with wind directions (e.g. '20-70' for wd between 20 and 70 degrees). wd=None if no selection has been performed
-    day_night: bool
-        daytime (day==True) or nightime selection (day==False). day==None if no selection has been performed
-    region: str
-        region name to evaluate emissions ('ER'=Emilia Romagna, 'TOS'=Toscana)
+    Get list with ch4 emission values
+    Parameters:
+    -------
+    custom_years: list
+        list of int containing the years to analyze. The default is ''. If default then uses the variable years that is defined in the config file, otherwise uses custom_years
+        for the analysis
     Returns
-    ----
-    None
+    -------
+    None.
     """
     co_emission_file  = './res_emission_selection/predicted_'+region+'_CO_yearly_emi.txt'
-    ch4_emission_file = './res_emission_selection/predicted_'+region+'_CH4_yearly_emi.txt'
-    species, suff = fmt.get_species_suffix(df)
-    
-    if month:
-        _,_,fit_table_nm = fmt.format_title_filenm(year=year, month=month, season=None,wd=wd, day_night=day_night, suff=suff, non_bkg=bads_no_bkg, robust=robustness)
-    if season:
-        _,_,fit_table_nm = fmt.format_title_filenm(year=year, month=season, season=season, wd=wd, day_night=day_night, suff=suff, non_bkg=bads_no_bkg, robust=robustness)
-    print('\nDATA AND PARAMETERS FOR CH4 ESTIMATION')
-    print('fit result file = ' + fit_table_nm)
-    fit_res_file = './'+conf.stat+'/res_fit/' + fit_table_nm
-    plot_nm_suffix = fit_table_nm[11:(len(fit_table_nm)-4)]
     
     GWP = 25 # Global warming potential of greenhouse gases over 100-year
     Mch4 = 16.043 # methane molecular weight
     Mco = 28.010 # CO molecular weight
     emi_co_frame = pd.read_csv(co_emission_file, sep=' ')
-    fit_frame = pd.read_csv(fit_res_file, sep=' ')
-    years = conf.years
+    if custom_years!='':
+        years=custom_years
+    else:
+        years = conf.years
+        
     ch4_emi = []
     print('year avg_slope')
     for year in years:
@@ -80,13 +66,55 @@ def eval_ch4_emis(df, year, month, season, wd, day_night, region, bads_no_bkg, r
                 #avg_slope = fit_frame[(fit_frame['year']==year) & (fit_frame['r2']>0.6)]['slope'].mean() 
         print(year, round(avg_slope,2))
         ch4_emi.append( avg_slope * emi_co_frame[emi_co_frame['year']==year]['emi[t]'] * Mch4 / Mco )
+        
+    return ch4_emi
+
+def eval_ch4_emis(df, year, month, season, wd, day_night, region, bads_no_bkg, robustness):
+    """
+    Evaluate CH4 emission using CO emissions and the fit results
     
+    Parameters
+    ----------
+    year, month: bool
+        define if yearly and month selection has been performed (True/False)
+    wd: str
+        string with wind directions (e.g. '20-70' for wd between 20 and 70 degrees). wd=None if no selection has been performed
+    day_night: bool
+        daytime (day==True) or nightime selection (day==False). day==None if no selection has been performed
+    region: str
+        region name to evaluate emissions ('ER'=Emilia Romagna, 'TOS'=Toscana)
+    Returns
+    ----
+    None
+    """
+
+    species, suff = fmt.get_species_suffix(df)
+    
+    if month:
+        _,_,fit_table_nm = fmt.format_title_filenm(year=year, month=month, season=None,wd=wd, day_night=day_night, suff=suff, non_bkg=bads_no_bkg, robust=robustness)
+    if season:
+        _,_,fit_table_nm = fmt.format_title_filenm(year=year, month=season, season=season, wd=wd, day_night=day_night, suff=suff, non_bkg=bads_no_bkg, robust=robustness)
+    
+    print('\nDATA AND PARAMETERS FOR CH4 ESTIMATION')
+    print('fit result file = ' + fit_table_nm)
+    
+    fit_res_file = './'+conf.stat+'/res_fit/' + fit_table_nm
+    fit_frame = pd.read_csv(fit_res_file, sep=' ')
+
+    plot_nm_suffix = fit_table_nm[11:(len(fit_table_nm)-4)]
+    years = conf.years
+
+    ch4_emi = get_ch4_emis_list(region, fit_frame, robustness, season)
+    
+    ch4_emission_file = './res_emission_selection/predicted_'+region+'_CH4_yearly_emi.txt'
     emi_ch4_frame = pd.read_csv(ch4_emission_file, sep=' ')
+    
+    # plot
+    
     fig, ax = plt.subplots(1,1, figsize = (9,5))
     fig.suptitle('EDGAR measured and predicted emissions for CH$_4$ plus CO-estimated emissions for region '+region+'\nPerformed selections:' + plot_nm_suffix.replace('_',' '))
     ax.errorbar(emi_ch4_frame['year'], emi_ch4_frame['emi[t]'], emi_ch4_frame['emi_err[t]'], fmt='.', elinewidth=1, capsize=3)
     ax.scatter(years, ch4_emi, c='C1')
-    
     ax.set_xlabel('years')
     ax.set_ylim(0,max(emi_ch4_frame['emi[t]']+emi_ch4_frame['emi_err[t]'])*1.05)
     ax.set_ylabel('CH$_4$ total emission [t]')
@@ -114,7 +142,7 @@ def eval_ch4_emis(df, year, month, season, wd, day_night, region, bads_no_bkg, r
     
 def eval_ch4_monthly_emis(df, year, month, wd, day_night, region, bads_no_bkg):
     """
-    Evaluate CH4 emission using CO emissions and the fit results
+    Evaluate CH4 emission on a monthly base using CO emissions and the fit results
     
     Parameters
     ----------
@@ -201,6 +229,23 @@ def eval_ch4_monthly_emis(df, year, month, wd, day_night, region, bads_no_bkg):
 
     
 def boxplot(df, wd=None, bads_no_bkg=None):
+    """
+    create boxplot of monthly CH4, CO and CH4/CO values
+
+    Parameters
+    ----------
+    df : DataFrame
+        input dataframe.
+    wd : str
+        wind direction selection (e.g. 310-80). The default is None.
+    bads_no_bkg : bool
+        select between non-bkg (True), bkg (False) and all (None) conditions. The default is None.
+
+    Returns
+    -------
+    None.
+
+    """
     # df = df[['DateTime','co','ch4','WD','bkg']]
     df = sel.select_wd(df, wd)
     if (bads_no_bkg!=None) & (conf.stat=='CMN'):
@@ -254,6 +299,20 @@ def boxplot(df, wd=None, bads_no_bkg=None):
     rcParams.update(rcParamsDefault)
 
 def fit_season_emissions(df, wd=None, bads_no_bkg=None):
+    """
+    Provide a plot with the mean seasonal cycle over the analyzed years plus results from a sinusoidal fit.
+    Parameters
+    ----------
+    df : DataFrame
+        input dataframe.
+    wd : str
+        wind direction selection (e.g. 310-80). The default is None.
+    bads_no_bkg : bool
+        select between non-bkg (True), bkg (False) and all (None) conditions. The default is None.
+    Returns
+    -------
+    None
+    """
     # select WD and bkg
     df = sel.select_wd(df, wd)
     if (bads_no_bkg!=None) & (conf.stat=='CMN'):
@@ -284,10 +343,9 @@ def fit_season_emissions(df, wd=None, bads_no_bkg=None):
     i=0
     for ydata in [mean_co, mean_ch4,mean_ratio]:
         p_opt[i],p_cov[i]=cf(sin_fun,months,ydata, p0=(10, 0.5, 100))
-        print(p_opt[i])
+        #print(p_opt[i])
         i=i+1
        
-    
     # plot results
     
     fig,ax=plt.subplots(3,1, figsize=(7,7))
@@ -330,15 +388,74 @@ def fit_season_emissions(df, wd=None, bads_no_bkg=None):
     fig.suptitle(title)
     plt.savefig('./'+conf.stat+'/fit_'+conf.stat+'_'+filename_str+'.png')   
         
+
+
     
     
+def eval_ch4_emi_compact(stations, regions, year, month, season, wd, day_night, bads_no_bkg, robustness):
+    
+    stations_dict = {
+        'CMN':{
+            'years':[2018,2019,2020],
+            'non_bkg_specie':'co2'
+            },
+        'LMP':{
+            'years':[2020],
+            'non_bkg_specie':''
+            },
+        'PUY':{
+            'years':[2016,2017,2018,2019,2020],
+            'non_bkg_specie':''
+            },
+        'JFJ':{
+            'years':[2017,2018,2019,2020],
+            'non_bkg_specie':''
+            }
+        }
+    
+    fig, ax = plt.subplots(1,len(stations), figsize = (15,13), sharey=True)
+   
+    for (stat, region, i) in zip(stations,regions, np.arange(0,len(stations))):
+        
+        if month:
+            _,_,fit_table_nm = fmt.format_title_filenm(year=year, month=month, season=None,wd=wd, day_night=day_night, suff='', non_bkg=bads_no_bkg, robust=robustness, custom_station=stat, non_bkg_specie=stations_dict[stat]['non_bkg_specie'])
+        if season:
+            _,_,fit_table_nm = fmt.format_title_filenm(year=year, month=season, season=season, wd=wd, day_night=day_night, suff='', non_bkg=bads_no_bkg, robust=robustness, custom_station=stat, non_bkg_specie=stations_dict[stat]['non_bkg_specie'])
+        
+        print('\nDATA AND PARAMETERS FOR CH4 ESTIMATION')
+        print('fit result file = ' + fit_table_nm)
+        
+        fit_res_file = './'+stat+'/res_fit/' + fit_table_nm
+        fit_frame = pd.read_csv(fit_res_file, sep=' ')
+    
+        plot_nm_suffix = fit_table_nm[11:(len(fit_table_nm)-4)]
+        years = stations_dict[stat]['years']
+    
+        ch4_emi = get_ch4_emis_list(region, fit_frame, robustness, season, custom_years=stations_dict[stat]['years'])
+        
+        ch4_emission_file = './res_emission_selection/predicted_'+region+'_CH4_yearly_emi.txt'
+        emi_ch4_frame = pd.read_csv(ch4_emission_file, sep=' ')
     
     
-    
-    
-    
-    
-    
+        # plot
+        
+        ax[i].errorbar(emi_ch4_frame['year'      ][-len(years)-1:len(emi_ch4_frame['year']      )-1], 
+                       emi_ch4_frame['emi[t]'    ][-len(years)-1:len(emi_ch4_frame['emi[t]']    )-1], 
+                       emi_ch4_frame['emi_err[t]'][-len(years)-1:len(emi_ch4_frame['emi_err[t]'])-1], 
+                       fmt='.', elinewidth=1, capsize=3)
+
+        ax[i].scatter(years, ch4_emi[-len(years):len(ch4_emi)], c='C1')
+        ax[i].grid()
+        ax[i].set_xlabel('years')
+        ax[i].set_xlim(years[0]-1, years[-1]+1)
+    ax[0].set_ylim(0,max(emi_ch4_frame['emi[t]']+emi_ch4_frame['emi_err[t]'])*1.05)
+    ax[0].set_ylabel('CH$_4$ total emission [t]')
+
+    fig.suptitle('EDGAR measured and predicted emissions for CH$_4$ plus CO-estimated emissions for region XXXX\nPerformed selections:' + plot_nm_suffix.replace('_',' '))
+    fig.savefig('./'+stat+'/plot_estimated_emissions/CH4_CO_compact_'+region+'_estimated_emissions'+plot_nm_suffix+'.pdf', format = 'pdf')
+
+            
+        
     
     
     

@@ -111,6 +111,11 @@ evem.fit_season_emissions(co_ch4_frame, wd=None, bads_no_bkg=False)
 evem.fit_season_emissions(co_ch4_frame, wd='310-80', bads_no_bkg=False)
 evem.fit_season_emissions(co_ch4_frame, wd='310-80', bads_no_bkg=True)
 
+################# eval emissions compact ##################
+
+evem.eval_ch4_emi_compact(['CMN','CMN','CMN'],['PO','PO','PO'], year=True, month=False, season=True, wd='310-80', day_night=None, bads_no_bkg=True, robustness=True)
+
+sys.exit()
 ##################          Toscana       ###########################
 # sel.select_and_fit(co_ch4_frame, year=True, month=False,  season=True, wd=None, day_night=None, plot=True, bads_no_bkg=True)
 # evem.eval_ch4_emis(co_ch4_frame, year=True, month=False,  season=True, wd=None, day_night=None, region='TOS', bads_no_bkg=True)
