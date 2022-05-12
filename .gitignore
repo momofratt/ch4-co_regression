@@ -3,9 +3,12 @@ BaDS_baseline
 L2_ICOS_data
 __pycache__ 
 PUY
+OPE
 HPB
 LMP                   
 PRS
 CMN
 JFJ
 res_emission_selection
+results_all*
+*.csv
