@@ -90,7 +90,6 @@ def fit_and_scatter_plot(df, year, month, wd, day_night, plot, non_bkg, robustne
     -------
     """
 
-
     # define columns and format titles and filenames
 
     species, suff = fmt.get_species_suffix(df)
@@ -122,9 +121,10 @@ def fit_and_scatter_plot(df, year, month, wd, day_night, plot, non_bkg, robustne
         monthly_check_array = np.empty(0)
         for i in range(n_iter):
             df_sub=df.sample(frac = fraction)
-            ort_res_sub, lin_res_sub, thsen_res_sub = ortho_lin_regress(df_sub[species[0]], df_sub[species[1]], df_sub[errors[0]], df_sub[errors[1]])
-            #monthly_check_array = np.append(monthly_check_array, ort_res_sub.beta[0]) # usa fit ortogonale
-            monthly_check_array = np.append(monthly_check_array, lin_res_sub[0])
+            if len(df_sub)>1: # check on dataframe length to avoid fit over empty columns
+	            ort_res_sub, lin_res_sub, thsen_res_sub = ortho_lin_regress(df_sub[species[0]], df_sub[species[1]], df_sub[errors[0]], df_sub[errors[1]])
+        	    #monthly_check_array = np.append(monthly_check_array, ort_res_sub.beta[0]) # usa fit ortogonale
+        	    monthly_check_array = np.append(monthly_check_array, lin_res_sub[0])
         if np.std(monthly_check_array)/np.mean(monthly_check_array) < threshold:
             robust = True
         else:

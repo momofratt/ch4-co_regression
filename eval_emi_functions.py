@@ -22,6 +22,8 @@ import matplotlib.ticker as mticker
 from matplotlib import rcParams, rcParamsDefault
 import numpy as np
 from scipy.optimize import curve_fit as cf
+import lin_reg_functions as lrf
+import datetime as dt
 
 def get_ch4_emis_list(region, fit_frame, robustness, season, custom_years=''):
     """
@@ -54,9 +56,9 @@ def get_ch4_emis_list(region, fit_frame, robustness, season, custom_years=''):
         
         if robustness:
             if not season:
-                avg_slope = fit_frame[(fit_frame['year']==year) & (fit_frame['robust']==True)]['slope'].mean() # use only robust months
+                avg_slope = fit_frame[(fit_frame['year']==year) & (fit_frame['robust']==True) & (fit_frame['r2']>0.6)]['slope'].mean() # use only robust months
             else:
-                avg_slope = fit_frame[(fit_frame['year']==year) & (fit_frame['robust']==True)]['slope'].mean() # use only robust months
+                avg_slope = fit_frame[(fit_frame['year']==year) & (fit_frame['robust']==True) & (fit_frame['r2']>0.6)]['slope'].mean() # use only robust months
         else: # should consider only seasonal fit with r2>0.6? In case you could loose one over 4 season each year!
             if not season:
                 avg_slope = fit_frame[(fit_frame['year']==year) ]['slope'].mean()
@@ -128,7 +130,7 @@ def eval_ch4_emis(df, year, month, season, wd, day_night, region, bads_no_bkg, r
         mean_slope_weak=[]
         months = arange(1,13,1)
         for month in ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August','September','October','November','December']:
-            mean_slope.append(fit_frame[(fit_frame['month']==month) & (fit_frame['robust']==True)]['slope'].mean())
+            mean_slope.append(fit_frame[(fit_frame['month']==month) & (fit_frame['robust']==True) & (fit_frame['r2']>0.6)]['slope'].mean())
             mean_slope_weak.append(fit_frame[(fit_frame['month']==month)]['slope'].mean())
         
         ax1.plot(months,mean_slope, marker='.', ls='-', label='robust data', markersize=15)
@@ -140,7 +142,7 @@ def eval_ch4_emis(df, year, month, season, wd, day_night, region, bads_no_bkg, r
         fig1.savefig('./'+conf.stat+'/plot_estimated_emissions/CH4:CO_slope'+plot_nm_suffix+'.pdf', format = 'pdf')
         
     
-def eval_ch4_monthly_emis(df, year, month, wd, day_night, region, bads_no_bkg):
+def eval_ch4_monthly_emis(df, year, month, wd, day_night, region, bads_no_bkg, robustness):
     """
     Evaluate CH4 emission on a monthly base using CO emissions and the fit results
     
@@ -162,7 +164,7 @@ def eval_ch4_monthly_emis(df, year, month, wd, day_night, region, bads_no_bkg):
     ch4_emission_file = './res_emission_selection/predicted_'+region+'_CH4_monthly_emi.txt'
     species, suff = fmt.get_species_suffix(df)
     
-    _,_,fit_table_nm = fmt.format_title_filenm(year=year, month=month, season=None, wd=wd, day_night=day_night, suff=suff, non_bkg=bads_no_bkg)
+    _,_,fit_table_nm = fmt.format_title_filenm(year=year, month=month, season=None, wd=wd, day_night=day_night, suff=suff, non_bkg=bads_no_bkg, robust=robustness)
     print('\nDATA AND PARAMETERS FOR CH4 ESTIMATION')
     print('fit result file = ' + fit_table_nm)
     
@@ -175,7 +177,7 @@ def eval_ch4_monthly_emis(df, year, month, wd, day_night, region, bads_no_bkg):
     emi_co_frame = pd.read_csv(co_emission_file, sep=' ')
     emi_ch4_frame = pd.read_csv(ch4_emission_file, sep=' ')
     fit_frame    = pd.read_csv(fit_res_file, sep=' ')
-    years = [2018,2019,2020]
+    years = conf.years
     print('year avg_slope')
     ch4_emi   = []
     date_list = []
@@ -213,8 +215,8 @@ def eval_ch4_monthly_emis(df, year, month, wd, day_night, region, bads_no_bkg):
     ax.set_xlabel('years')
     ax.set_ylabel('CH$_4$ total emission [t]')
     ax.grid()
-    ax.axvline('2019-1-1', c='black')
-    ax.axvline('2020-1-1', c='black')
+    for year in conf.years:
+	    ax.axvline(str(year)+'-1-1', c='black')
     ax.legend(loc='lower left')
     ax.set_ylim(bottom=0)
  
@@ -295,7 +297,7 @@ def boxplot(df, wd=None, bads_no_bkg=None):
 
     fig.subplots_adjust(hspace=0.1)
     fig.suptitle(title, fontsize=30)
-    plt.savefig('./'+conf.stat+'/boxplot_'+conf.stat+'_'+filename_str+'.png')   
+    plt.savefig('./'+conf.stat+'/boxplot_'+conf.stat+'_'+filename_str+'.pdf', format = 'pdf')   
     rcParams.update(rcParamsDefault)
 
 def fit_season_emissions(df, wd=None, bads_no_bkg=None):
@@ -392,76 +394,114 @@ def fit_season_emissions(df, wd=None, bads_no_bkg=None):
 
     
     
-def eval_ch4_emi_compact(stations, regions, year, month, season, wd, day_night, bads_no_bkg, robustness):
+def eval_ch4_emi_compact(stations, regions, year, month, season, wd, day_night, bads_no_bkg, robustness, non_bkg_specie):
     
     stations_dict = {
         'CMN':{
             'years':[2018,2019,2020],
-            'non_bkg_specie':'co2'
             },
         'LMP':{
             'years':[2020],
-            'non_bkg_specie':''
             },
         'PUY':{
-            'years':[2016,2017,2018,2019,2020],
-            'non_bkg_specie':''
+            'years':[2017,2018,2019,2020,2021],
             },
         'JFJ':{
-            'years':[2017,2018,2019,2020],
-            'non_bkg_specie':''
+            'years':[2017,2018,2019,2020,2021],
+            },
+        'HPB':{
+            'years':[2017,2018,2019,2020,2021],
+            },
+        'OPE':{
+            'years':[2017,2018,2019,2020,2021],
             }
         }
-    
-    fig, ax = plt.subplots(1,len(stations), figsize = (15,13), sharey=True)
+        
+    plt.style.use('ggplot')
+    fig, ax = plt.subplots(1,len(stations), figsize = (3*len(stations),5), sharey=True)
    
     for (stat, region, i) in zip(stations,regions, np.arange(0,len(stations))):
         
-        if month:
-            _,_,fit_table_nm = fmt.format_title_filenm(year=year, month=month, season=None,wd=wd, day_night=day_night, suff='', non_bkg=bads_no_bkg, robust=robustness, custom_station=stat, non_bkg_specie=stations_dict[stat]['non_bkg_specie'])
-        if season:
-            _,_,fit_table_nm = fmt.format_title_filenm(year=year, month=season, season=season, wd=wd, day_night=day_night, suff='', non_bkg=bads_no_bkg, robust=robustness, custom_station=stat, non_bkg_specie=stations_dict[stat]['non_bkg_specie'])
+        if month[i]:
+            _,_,fit_table_nm = fmt.format_title_filenm(year=year, month=month[i], season=None,wd=wd[i], day_night=day_night, suff='', non_bkg=bads_no_bkg[i], robust=robustness[i], custom_station=stat, non_bkg_specie=non_bkg_specie[i])
+        if season[i]:
+            _,_,fit_table_nm = fmt.format_title_filenm(year=year, month=season[i], season=season[i], wd=wd[i], day_night=day_night, suff='', non_bkg=bads_no_bkg[i], robust=robustness[i], custom_station=stat, non_bkg_specie=non_bkg_specie[i])
         
         print('\nDATA AND PARAMETERS FOR CH4 ESTIMATION')
         print('fit result file = ' + fit_table_nm)
         
         fit_res_file = './'+stat+'/res_fit/' + fit_table_nm
         fit_frame = pd.read_csv(fit_res_file, sep=' ')
-    
         plot_nm_suffix = fit_table_nm[11:(len(fit_table_nm)-4)]
         years = stations_dict[stat]['years']
     
-        ch4_emi = get_ch4_emis_list(region, fit_frame, robustness, season, custom_years=stations_dict[stat]['years'])
+        ch4_emi = get_ch4_emis_list(region, fit_frame, robustness[i], season[i], custom_years=stations_dict[stat]['years'])
         
         ch4_emission_file = './res_emission_selection/predicted_'+region+'_CH4_yearly_emi.txt'
         emi_ch4_frame = pd.read_csv(ch4_emission_file, sep=' ')
-    
-    
+        emi_ch4_frame = emi_ch4_frame[emi_ch4_frame['year']>=years[0]]
+        if stat=='CMN':
+            emi_ch4_frame= emi_ch4_frame[emi_ch4_frame['year']<2021]
+            
+        co_emission_file = './res_emission_selection/predicted_'+region+'_CO_yearly_emi.txt'
+        emi_co_frame = pd.read_csv(co_emission_file, sep=' ')
+        emi_co_frame = emi_co_frame[emi_co_frame['year']>=years[0]]
+        if stat=='CMN':
+            emi_co_frame= emi_co_frame[emi_co_frame['year']<2021]
         # plot
         
-        ax[i].errorbar(emi_ch4_frame['year'      ][-len(years)-1:len(emi_ch4_frame['year']      )-1], 
-                       emi_ch4_frame['emi[t]'    ][-len(years)-1:len(emi_ch4_frame['emi[t]']    )-1], 
-                       emi_ch4_frame['emi_err[t]'][-len(years)-1:len(emi_ch4_frame['emi_err[t]'])-1], 
-                       fmt='.', elinewidth=1, capsize=3)
-
-        ax[i].scatter(years, ch4_emi[-len(years):len(ch4_emi)], c='C1')
-        ax[i].grid()
+        ax[i].errorbar(emi_ch4_frame['year'      ], 
+                       emi_ch4_frame['emi[t]'    ], 
+                       emi_ch4_frame['emi_err[t]'], 
+                       fmt='.', elinewidth=3, capsize=5, markersize=10,color='C1', label='EDGAR CH$_4$')
+        
+        ax[i].errorbar(emi_co_frame['year'      ], 
+                       emi_co_frame['emi[t]'    ], 
+                       emi_co_frame['emi_err[t]'], 
+                       fmt='.', elinewidth=1, capsize=3, color ='C2', label='EDGAR CO')
+        
+        ax[i].scatter(years, ch4_emi[-len(years):len(ch4_emi)], c='red', label='estimated CH$_4$')
+        ax[i].grid(True)
         ax[i].set_xlabel('years')
         ax[i].set_xlim(years[0]-1, years[-1]+1)
-    ax[0].set_ylim(0,max(emi_ch4_frame['emi[t]']+emi_ch4_frame['emi_err[t]'])*1.05)
-    ax[0].set_ylabel('CH$_4$ total emission [t]')
+        ax[i].set_xticks(years)
+        ax_title = str(stat) 
+        
+        if wd[i]!=None:
+            ax_title=ax_title+ ' WD:' +str(wd[i])
+        if bads_no_bkg[i] == True:
+            ax_title = ax_title+' non-bkg'
+        elif bads_no_bkg[i] == False:
+            ax_title = ax_title+' bkg'
 
-    fig.suptitle('EDGAR measured and predicted emissions for CH$_4$ plus CO-estimated emissions for region XXXX\nPerformed selections:' + plot_nm_suffix.replace('_',' '))
-    fig.savefig('./'+stat+'/plot_estimated_emissions/CH4_CO_compact_'+region+'_estimated_emissions'+plot_nm_suffix+'.pdf', format = 'pdf')
+        ax[i].set_title(ax_title, fontdict={'fontsize': 10})
+        
+    ax[0].set_ylim(0,1e6)
+    ax[0].set_ylabel('CH$_4$ total emission [t]')
+    ax[-1].legend(loc = 'upper right',bbox_to_anchor=(1.87, 1))
+    fig.autofmt_xdate()
+    fig.suptitle('EDGAR measured and predicted emissions for CH$_4$ plus CO-estimated emissions at different stations')
+    fig.savefig('./results_all_stat/CH4_CO_compact_estimated_emissions'+plot_nm_suffix+'.pdf', format = 'pdf')
 
             
         
-    
-    
-    
-    
-    
-    
+def daily_ratio(df):
+    days = df['DateTime'].dt.date.drop_duplicates()
+    coeff_frame = pd.DataFrame({'DateTime':[],'coeff':[],'intercept':[]})
+
+    for today in days[1:-1]:
+        yesterday = today-dt.timedelta(days=1)
+        df_daily = df[(df['DateTime'].dt.date == today) | (df['DateTime'].dt.date == yesterday)].copy()
+
+        df_daytime   =  df_daily[(df_daily['DateTime'].dt.date==today) & (df_daily['DateTime'].dt.hour>=8) & (df_daily['DateTime'].dt.hour<20)] # daily time of day
+        df_nighttime =  df_daily[((df_daily['DateTime'].dt.date==yesterday) & (df_daily['DateTime'].dt.hour>=20) & (df_daily['DateTime'].dt.hour<24) )| 
+                                 ((df_daily['DateTime'].dt.date==today) &(df_daily['DateTime'].dt.hour>=0) & (df_daily['DateTime'].dt.hour<8))]
+        for frame in [df_nighttime, df_daytime]:
+            if (len(df_daytime)>10) & (len(df_nighttime)>10):
+                _, _, thsen_res = lrf.ortho_lin_regress(frame['co'], frame['ch4'], frame['Stdev_co'], frame['Stdev_ch4'])
+
+                coeff_frame.loc[len(coeff_frame.index)] = [frame['DateTime'].iat[0], 
+                                                               thsen_res.coef_[0], thsen_res.intercept_]
     
     
     
