@@ -25,7 +25,7 @@ from scipy.optimize import curve_fit as cf
 import lin_reg_functions as lrf
 import datetime as dt
 
-def get_ch4_emis_list(region, fit_frame, robustness, season, custom_years=''):
+def get_ch4_emis_list(region, fit_frame, robustness, season, custom_years='', IPR=False):
     """
     Get list with ch4 emission values
     Parameters:
@@ -37,7 +37,10 @@ def get_ch4_emis_list(region, fit_frame, robustness, season, custom_years=''):
     -------
     None.
     """
-    co_emission_file  = './res_emission_selection/predicted_'+region+'_CO_yearly_emi.txt'
+    if IPR:
+        co_emission_file  = './res_emission_selection/predicted_'+region+'_ISPRA_CO_yearly_emi.txt'
+    else:
+        co_emission_file  = './res_emission_selection/predicted_'+region+'_CO_yearly_emi.txt'
     
     GWP = 25 # Global warming potential of greenhouse gases over 100-year
     Mch4 = 16.043 # methane molecular weight
@@ -394,11 +397,11 @@ def fit_season_emissions(df, wd=None, bads_no_bkg=None):
 
     
     
-def eval_ch4_emi_compact(stations, regions, year, month, season, wd, day_night, bads_no_bkg, robustness, non_bkg_specie):
+def eval_ch4_emi_compact(stations, regions, year, month, season, wd, day_night, bads_no_bkg, robustness, non_bkg_specie, ylims, IPR):
     
     stations_dict = {
         'CMN':{
-            'years':[2018,2019,2020],
+            'years':[2018,2019],
             },
         'LMP':{
             'years':[2020],
@@ -418,14 +421,14 @@ def eval_ch4_emi_compact(stations, regions, year, month, season, wd, day_night, 
         }
         
     plt.style.use('ggplot')
-    fig, ax = plt.subplots(1,len(stations), figsize = (3*len(stations),5), sharey=True)
+    fig, ax = plt.subplots(1,len(stations), figsize = (3*len(stations),5))
    
     for (stat, region, i) in zip(stations,regions, np.arange(0,len(stations))):
         
         if month[i]:
-            _,_,fit_table_nm = fmt.format_title_filenm(year=year, month=month[i], season=None,wd=wd[i], day_night=day_night, suff='', non_bkg=bads_no_bkg[i], robust=robustness[i], custom_station=stat, non_bkg_specie=non_bkg_specie[i])
+            _,_,fit_table_nm = fmt.format_title_filenm(year=year, month=month[i], season=None,wd=wd[i], day_night=day_night[i], suff='', non_bkg=bads_no_bkg[i], robust=robustness[i], custom_station=stat, non_bkg_specie=non_bkg_specie[i])
         if season[i]:
-            _,_,fit_table_nm = fmt.format_title_filenm(year=year, month=season[i], season=season[i], wd=wd[i], day_night=day_night, suff='', non_bkg=bads_no_bkg[i], robust=robustness[i], custom_station=stat, non_bkg_specie=non_bkg_specie[i])
+            _,_,fit_table_nm = fmt.format_title_filenm(year=year, month=season[i], season=season[i], wd=wd[i], day_night=day_night[i], suff='', non_bkg=bads_no_bkg[i], robust=robustness[i], custom_station=stat, non_bkg_specie=non_bkg_specie[i])
         
         print('\nDATA AND PARAMETERS FOR CH4 ESTIMATION')
         print('fit result file = ' + fit_table_nm)
@@ -436,39 +439,54 @@ def eval_ch4_emi_compact(stations, regions, year, month, season, wd, day_night, 
         years = stations_dict[stat]['years']
     
         ch4_emi = get_ch4_emis_list(region, fit_frame, robustness[i], season[i], custom_years=stations_dict[stat]['years'])
-        
+        ch4_emi_IPR = get_ch4_emis_list(region, fit_frame, robustness[i], season[i], custom_years=[2018,2019],IPR=True)
+
         ch4_emission_file = './res_emission_selection/predicted_'+region+'_CH4_yearly_emi.txt'
         emi_ch4_frame = pd.read_csv(ch4_emission_file, sep=' ')
         emi_ch4_frame = emi_ch4_frame[emi_ch4_frame['year']>=years[0]]
         if stat=='CMN':
-            emi_ch4_frame= emi_ch4_frame[emi_ch4_frame['year']<2021]
-            
+            emi_ch4_frame= emi_ch4_frame[emi_ch4_frame['year']<2020]
+            ch4_emission_file  = './res_emission_selection/predicted_'+region+'_ISPRA_CH4_yearly_emi.txt'
+            emi_ch4_frame_ISPRA = pd.read_csv(ch4_emission_file, sep=' ')
         co_emission_file = './res_emission_selection/predicted_'+region+'_CO_yearly_emi.txt'
         emi_co_frame = pd.read_csv(co_emission_file, sep=' ')
         emi_co_frame = emi_co_frame[emi_co_frame['year']>=years[0]]
         if stat=='CMN':
-            emi_co_frame= emi_co_frame[emi_co_frame['year']<2021]
+            emi_co_frame= emi_co_frame[emi_co_frame['year']<2020]
         # plot
-        
-        ax[i].errorbar(emi_ch4_frame['year'      ], 
+        if IPR[i] == True:
+            offset=0.15
+        else:
+            offset=0
+
+        ax[i].errorbar(emi_ch4_frame['year'      ]-offset, 
                        emi_ch4_frame['emi[t]'    ], 
                        emi_ch4_frame['emi_err[t]'], 
                        fmt='.', elinewidth=3, capsize=5, markersize=10,color='C1', label='EDGAR CH$_4$')
         
-        ax[i].errorbar(emi_co_frame['year'      ], 
-                       emi_co_frame['emi[t]'    ], 
-                       emi_co_frame['emi_err[t]'], 
-                       fmt='.', elinewidth=1, capsize=3, color ='C2', label='EDGAR CO')
+       
         
-        ax[i].scatter(years, ch4_emi[-len(years):len(ch4_emi)], c='red', label='estimated CH$_4$')
+        ax[i].scatter(np.array(years)-offset, ch4_emi[-len(years):len(ch4_emi)], c='red', label='estimated CH$_4$ EDGAR')
+        
+        if IPR[i] == True:
+            ax[i].errorbar(emi_ch4_frame_ISPRA['year'      ]+offset, 
+                        emi_ch4_frame_ISPRA['emi[t]'    ], 
+                        emi_ch4_frame_ISPRA['emi[t]'    ]*offset, 
+                        fmt='.', elinewidth=1, capsize=3, color ='C2', label='ISPRA CH$_4$')
+        
+            ax[i].scatter([2018+offset,2019+offset], ch4_emi_IPR, c='C10',marker='^', label='estimated CH$_4$ ISPRA')
+
+        
         ax[i].grid(True)
         ax[i].set_xlabel('years')
         ax[i].set_xlim(years[0]-1, years[-1]+1)
+        ax[i].set_ylim(ylims[i][0],ylims[i][1])
+        ax[i].ticklabel_format(style='sci', scilimits=(-3,4))
         ax[i].set_xticks(years)
-        ax_title = str(stat) 
+        ax_title = '' 
         
         if wd[i]!=None:
-            ax_title=ax_title+ ' WD:' +str(wd[i])
+            ax_title=ax_title+ 'WD:' +str(wd[i])
         if bads_no_bkg[i] == True:
             ax_title = ax_title+' non-bkg'
         elif bads_no_bkg[i] == False:
@@ -476,12 +494,17 @@ def eval_ch4_emi_compact(stations, regions, year, month, season, wd, day_night, 
 
         ax[i].set_title(ax_title, fontdict={'fontsize': 10})
         
-    ax[0].set_ylim(0,1e6)
+        props = dict(boxstyle='round', facecolor='wheat', alpha=0.7)           
+        ax[i].text(0.5, 0.05, regions[i], horizontalalignment='center',
+                   verticalalignment='center', transform=ax[i].transAxes, bbox=props) 
+        
     ax[0].set_ylabel('CH$_4$ total emission [t]')
-    ax[-1].legend(loc = 'upper right',bbox_to_anchor=(1.87, 1))
+    ax[-1].legend(loc = 'upper right',bbox_to_anchor=(2.1, 1))
     fig.autofmt_xdate()
     fig.suptitle('EDGAR measured and predicted emissions for CH$_4$ plus CO-estimated emissions at different stations')
-    fig.savefig('./results_all_stat/CH4_CO_compact_estimated_emissions'+plot_nm_suffix+'.pdf', format = 'pdf')
+    fig.subplots_adjust(wspace=0.3, hspace=0.4)
+    plt.tight_layout()
+    fig.savefig('./results_all_stat/CH4_CO_compact_estimated_emissions'+plot_nm_suffix+'.pdf', format = 'pdf',)
 
             
         

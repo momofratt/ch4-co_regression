@@ -138,11 +138,13 @@ co_ch4_frame = co_ch4_frame[co_ch4_frame['ch4'].notna()]
 # sel.select_and_fit(co_ch4_frame, year=True, month=True, season=False, wd='310-80', day_night=False, plot=True, bads_no_bkg=False, robustness=True)
 # sel.select_and_fit(co_ch4_frame, year=True, month=True, season=False, wd='310-80', day_night=False, plot=True, bads_no_bkg=None, robustness=True)
 # sel.select_and_fit(co_ch4_frame, year=True, month=True, season=False, wd='110-270', day_night=None, plot=True, bads_no_bkg=True, robustness=True)
-# sel.select_and_fit(co_ch4_frame, year=True, month=True, season=False, wd='110-270', day_night=None, plot=True, bads_no_bkg=False, robustness=True)
-sel.select_and_fit(co_ch4_frame, year=True, month=True, season=False, wd='110-270', day_night=True,  plot=True, bads_no_bkg=None, robustness=True)
-sel.select_and_fit(co_ch4_frame, year=True, month=True, season=False, wd='110-270', day_night=True,  plot=True, bads_no_bkg=True, robustness=True)
-sel.select_and_fit(co_ch4_frame, year=True, month=True, season=False, wd='110-270', day_night=False, plot=True, bads_no_bkg=False, robustness=True)
-sel.select_and_fit(co_ch4_frame, year=True, month=True, season=False, wd='110-270', day_night=False, plot=True, bads_no_bkg=None, robustness=True)
+# sel.select_and_fit(co_ch4_frame, year=True, month=True, season=False, wd='110-180', day_night=None, plot=True, bads_no_bkg=None, robustness=True)
+# sel.select_and_fit(co_ch4_frame, year=True, month=True, season=False, wd='110-180', day_night=None,  plot=True, bads_no_bkg=True, robustness=True)
+# sel.select_and_fit(co_ch4_frame, year=True, month=True, season=False, wd='110-180', day_night=True,  plot=True, bads_no_bkg=None, robustness=True)
+# sel.select_and_fit(co_ch4_frame, year=True, month=True, season=False, wd='110-180', day_night=False,  plot=True, bads_no_bkg=None, robustness=True)
+
+# sel.select_and_fit(co_ch4_frame, year=True, month=True, season=False, wd='110-270', day_night=False, plot=True, bads_no_bkg=False, robustness=True)
+# sel.select_and_fit(co_ch4_frame, year=True, month=True, season=False, wd='110-270', day_night=False, plot=True, bads_no_bkg=None, robustness=True)
 #evem.eval_ch4_emis(co_ch4_frame, year=True, month=True, season=False, wd=None, day_night=None, region='OPE', bads_no_bkg=None, robustness=True)
 #evem.eval_ch4_emis(co_ch4_frame, year=True, month=True, season=False, wd=None, day_night=None, region='PO', bads_no_bkg=None, robustness=True)
 #evem.eval_ch4_emis(co_ch4_frame, year=True, month=True, season=False, wd=None, day_night=None, region='GER', bads_no_bkg=None, robustness=True)
@@ -168,16 +170,42 @@ sel.select_and_fit(co_ch4_frame, year=True, month=True, season=False, wd='110-27
 ################# eval emissions compact ##################
 
 # evem.eval_ch4_emi_compact(['CMN','CMN','JFJ','OPE','HPB','PUY'],['PO','PO','PO','OPE','GER','PUY'], year=True, month=[True,True,True,True,True,True], season=[False,False,False,False,False,False], wd=['310-80','310-80','100-190',None,None,None], day_night=None, bads_no_bkg=[True,False,None,None,None,None], robustness=[True,True,True,True,True,True])
-evem.eval_ch4_emi_compact(['CMN','CMN','CMN','CMN','CMN','CMN','CMN'],
-                          ['PO','PO','PO','PO','PO','PO','PO'], year=True, 
-                          month=       [True,True,True,True,True,True,True], 
-                          season=      [False,False,False,False,False,False,False], 
-                          wd=          [None,'310-80','110-270','310-80','310-80','310-80','310-80'], day_night=None, 
-                          bads_no_bkg= [None,None,None,True,True,False,False], 
-                          robustness = [True,True,True,True,True,True,True],
-                          non_bkg_specie=['','','','co2','co+ch4','co2','co+ch4'])
+# evem.eval_ch4_emi_compact(['CMN','CMN','CMN','CMN','CMN','CMN'],
+#                           ['PO','PO','PO','TOS','TOS','TOS'], year=True, 
+#                           month=       [True,True,True,True,True,True,True], 
+#                           season=      [False,False,False,False,False,False,False], 
+#                           wd=          [None,'310-80','110-180',None,'310-80','110-180'], 
+#                           day_night=   [None,None,None,None,None,None,None], 
+#                           bads_no_bkg= [None,None,None,None,None,None,None], 
+#                           robustness = [True,True,True,True,True,True,True],
+#                           non_bkg_specie=['','','','','','',''],
+#                           ylims=[[0,1e6],[0,1e6],[0,1e6],[0,2e5],[0,2e5],[0,2e5]],
+#                            IPR=[False,False,False,False,False,False])
+
+evem.eval_ch4_emi_compact(['CMN','CMN','CMN','CMN'],
+                          ['PO','PO','TOS','TOS'], year=True, 
+                          month=       [True,True,True,True], 
+                          season=      [False,False,False,False], 
+                          wd=          ['310-80','310-80','110-180','110-180'], 
+                          day_night=   [None,None,None,None], 
+                          bads_no_bkg= [True,False,True,False], 
+                          robustness = [True,True,True,True],
+                          non_bkg_specie=['','','','','','',''],
+                          ylims=[[0,1e6],[0,1e6],[0,2e5],[0,2e5]],
+                          IPR=[False,False,False,False])
 
 
+evem.eval_ch4_emi_compact(['CMN','CMN','CMN','CMN'],
+                          ['PO','PO','TOS','TOS'], year=True, 
+                          month=       [True,True,True,True], 
+                          season=      [False,False,False,False], 
+                          wd=          [None,'310-80',None,'110-180'], 
+                          day_night=   [None,None,None,None,None], 
+                          bads_no_bkg= [None,None,None,None,None], 
+                          robustness = [True,True,True,True,True],
+                          non_bkg_specie=['','','','',''],
+                          ylims=[[0,1e6],[0,1e6],[0,2e5],[0,2e5]],
+                          IPR=[False,False,False,False])
 
 
 
